@@ -1,0 +1,19 @@
+<h1>Dashboard</h1>
+@if (stats()) {
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ stats()!.totalUsers }}</div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ stats()!.totalTransactions }}</div>
+      <div class="stat-label">Total Transactions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color: var(--color-coin)">{{ stats()!.totalCoinsEarned | number }}</div>
+      <div class="stat-label">Total Coins Earned</div>
+    </div>
+  </div>
+} @else {
+  <p style="color: var(--color-text-muted); margin-top: 24px">Loading stats...</p>
+}

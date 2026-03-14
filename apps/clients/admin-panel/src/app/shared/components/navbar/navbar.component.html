@@ -1,0 +1,14 @@
+<nav>
+  <span class="brand">Token Town Admin</span>
+  <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+  <a routerLink="/users" routerLinkActive="active">Users</a>
+  <a routerLink="/shop" routerLinkActive="active">Shop</a>
+  <a routerLink="/leaderboard" routerLinkActive="active">Leaderboard</a>
+  <span class="spacer"></span>
+  @if (auth.isLoggedIn) {
+    <span class="user-info">{{ auth.currentUser?.name }}</span>
+    <button (click)="auth.logout()">Logout</button>
+  } @else {
+    <button (click)="auth.login()">Login with Microsoft</button>
+  }
+</nav>

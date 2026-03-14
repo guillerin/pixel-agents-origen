@@ -1,0 +1,23 @@
+<h1>Users</h1>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th><th>Email</th><th>Coins</th><th>Total Earned</th><th>Role</th><th>Adjust Coins</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (user of users(); track user.id) {
+      <tr>
+        <td>{{ user.displayName }}</td>
+        <td>{{ user.email || '—' }}</td>
+        <td class="coin">{{ user.coins | number }}</td>
+        <td class="coin">{{ user.totalCoinsEarned | number }}</td>
+        <td><span class="badge" [class.badge-admin]="user.role === 'admin'" [class.badge-user]="user.role === 'user'">{{ user.role }}</span></td>
+        <td>
+          <input type="number" [(ngModel)]="adjustAmounts[user.id]" placeholder="±coins">
+          <button class="btn-adjust" (click)="adjustCoins(user.id)">Apply</button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>

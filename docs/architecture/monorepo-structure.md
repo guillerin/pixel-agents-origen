@@ -8,108 +8,58 @@ Token Town transforms the single-extension Pixel Agents project into a multiplay
 
 ```
 token-town/
-├── package.json                  # Root: workspace config, shared scripts
-├── turbo.json                    # Turborepo pipeline config
-├── tsconfig.base.json            # Shared TS settings (all packages extend)
-├── .eslintrc.base.mjs            # Shared lint config
-├── .prettierrc                   # Shared formatting
-│
+├── apps/
+│   ├── clients/
+│   │   ├── vscode-extension/     # @token-town/vscode-extension
+│   │   │   ├── src/              # Extension backend (TypeScript)
+│   │   │   ├── webview-ui/       # React webview (Vite)
+│   │   │   ├── esbuild.js
+│   │   │   ├── package.json
+│   │   │   └── tsconfig.json
+│   │   └── admin-panel/          # @token-town/admin-panel
+│   │       ├── src/              # Angular 19+ app
+│   │       ├── angular.json
+│   │       └── package.json
+│   └── servers/
+│       └── game-server/          # Go module: token-town/server
+│           ├── cmd/server/       # Entry point
+│           ├── internal/         # Go packages
+│           ├── go.mod
+│           └── Makefile
 ├── packages/
-│   ├── shared/                   # @token-town/shared
-│   │   ├── src/
-│   │   │   ├── types/
-│   │   │   │   ├── user.ts       # User, UserProfile
-│   │   │   │   ├── room.ts       # Room, RoomState, Tile, Furniture
-│   │   │   │   ├── agent.ts      # Agent, SubAgent, AgentStatus
-│   │   │   │   ├── economy.ts    # Transaction, Wallet, ShopItem, Currency
-│   │   │   │   ├── furniture.ts  # FurnitureItem, FurnitureCatalogEntry, PlacedFurniture
-│   │   │   │   ├── events.ts     # All WebSocket event types (client↔server)
-│   │   │   │   └── index.ts      # Re-exports
-│   │   │   ├── constants.ts      # Shared constants (tile size, grid limits, etc.)
-│   │   │   ├── validation.ts     # Zod schemas for event payloads
-│   │   │   └── index.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   ├── game-client/              # @token-town/game-client
-│   │   ├── src/
-│   │   │   ├── App.tsx           # Composition root (migrated from webview-ui)
-│   │   │   ├── hooks/            # React hooks (migrated)
-│   │   │   ├── components/       # UI components (migrated)
-│   │   │   ├── office/           # Game engine (migrated from webview-ui/src/office/)
-│   │   │   │   ├── engine/       # gameLoop, renderer, characters, officeState
-│   │   │   │   ├── editor/       # Layout editor
-│   │   │   │   ├── layout/       # Furniture catalog, serializer, tileMap
-│   │   │   │   ├── sprites/      # Sprite data, cache
-│   │   │   │   └── ...
-│   │   │   ├── multiplayer/
-│   │   │   │   ├── connection.ts # WebSocket client, reconnect logic
-│   │   │   │   ├── sync.ts       # State reconciliation (server → local)
-│   │   │   │   └── presence.ts   # Other players' characters rendering
-│   │   │   ├── economy/
-│   │   │   │   ├── WalletDisplay.tsx
-│   │   │   │   └── ShopModal.tsx
-│   │   │   ├── constants.ts
-│   │   │   ├── fonts/
-│   │   │   └── index.css
-│   │   ├── public/assets/        # Sprites, default layouts, etc.
-│   │   ├── index.html
-│   │   ├── vite.config.ts
-│   │   ├── package.json
-│   │   └── tsconfig.json
-│   │
-│   └── vscode-extension/         # @token-town/vscode-extension
+│   └── shared/                   # @token-town/shared
 │       ├── src/
-│       │   ├── extension.ts      # activate(), deactivate()
-│       │   ├── TokenTownViewProvider.ts  # WebviewViewProvider (renamed from PixelAgentsViewProvider)
-│       │   ├── agentManager.ts   # Terminal lifecycle (kept as-is)
-│       │   ├── assetLoader.ts    # PNG parsing (kept as-is)
-│       │   ├── fileWatcher.ts    # JSONL watching (kept as-is)
-│       │   ├── transcriptParser.ts
-│       │   ├── layoutPersistence.ts
-│       │   ├── timerManager.ts
-│       │   ├── tokenReporter.ts  # NEW: reports token usage to game-server
-│       │   ├── constants.ts
-│       │   └── types.ts
-│       ├── esbuild.js
-│       ├── package.json          # VS Code extension manifest
+│       │   └── index.ts          # Shared TypeScript types
+│       ├── package.json
 │       └── tsconfig.json
-│
-├── server/                       # Go module (game-server + economy-engine combined)
-│   ├── cmd/server/main.go        # Entry point
-│   ├── internal/
-│   │   ├── economy/              # Token→coin logic, wallet, shop (pure Go)
-│   │   ├── rooms/                # Room management, authoritative state
-│   │   ├── ws/                   # WebSocket hub, client pumps
-│   │   ├── auth/                 # machineId auth, session tokens
-│   │   ├── api/                  # HTTP REST handlers (chi router)
-│   │   └── db/                   # sqlc-generated queries, migrations
-│   ├── go.mod                    # Go module: token-town/server
-│   ├── go.sum
-│   └── Makefile
-│
-├── scripts/                      # Asset pipeline (kept at root, not a package)
-│   ├── 0-import-tileset.ts
-│   ├── 1-detect-assets.ts
-│   ├── ...
-│   └── generate-walls.js
-│
-└── docs/
-    └── architecture/
+├── docs/
+│   ├── architecture/
+│   │   ├── economy-backend.md
+│   │   ├── monorepo-structure.md
+│   │   └── realtime-websockets.md
+│   └── project-summary.md
+├── scripts/                      # Asset pipeline (dev tools)
+├── package.json                  # Root workspace (pnpm)
+├── pnpm-workspace.yaml
+├── turbo.json
+├── tsconfig.base.json
+└── .gitignore
 ```
 
 ### Why These Packages
 
 | Package | Responsibility | Runs In |
 |---------|---------------|---------|
-| `shared` | Types, events, constants, validation schemas | Everywhere (isomorphic) |
-| `server/` (Go module) | WebSocket hub, room management, economy logic, REST API, DB persistence | Go server process |
-| `game-client` | React webview: rendering, game loop, UI | Browser (VS Code webview) |
-| `vscode-extension` | VS Code API integration, terminal management, asset loading | VS Code extension host (Node.js) |
+| `packages/shared` | Types, events, constants, validation schemas | Everywhere (isomorphic) |
+| `apps/servers/game-server` (Go module) | WebSocket hub, room management, economy logic, REST API, DB persistence | Go server process |
+| `apps/clients/vscode-extension` | VS Code API integration, terminal management, asset loading, React webview (game engine, rendering, UI) | VS Code extension host (Node.js) + webview (Browser) |
+| `apps/clients/admin-panel` | Admin dashboard, user/shop management, leaderboard | Browser (Angular 19+, Microsoft SSO) |
 
 **Why Go for the server**: Goroutines are ~2KB each vs ~1MB for a Node.js async task under load. For a WebSocket server expected to handle hundreds of concurrent connections with low latency event fan-out, Go's concurrency model is a natural fit. The economy logic (pure math functions) is trivial to implement in Go and benefits from static typing and compilation.
 
-**Why NOT a separate `asset-service`**: The asset pipeline (`scripts/`) is a dev-time tool, not a runtime service. Assets are static PNGs bundled into `game-client`. No need for a runtime asset service unless we add user-generated content later.
+**Why NOT a separate `asset-service`**: The asset pipeline (`scripts/`) is a dev-time tool, not a runtime service. Assets are static PNGs bundled into the extension's webview. No need for a runtime asset service unless we add user-generated content later.
+
+**Why webview-ui stays inside vscode-extension**: The React webview is tightly coupled to the extension via `postMessage` protocol. Keeping it as a subdirectory (`webview-ui/`) inside the extension package avoids an extra package boundary while maintaining separate build configs (Vite for webview, esbuild for extension).
 
 ## 3. Monorepo Tooling: pnpm Workspaces + Turborepo
 
@@ -126,7 +76,7 @@ token-town/
 - **pnpm**: Strict node_modules isolation prevents the phantom dependency bugs that plague npm workspaces. The VS Code extension build (esbuild) and the webview build (Vite) have very different dependency trees — pnpm keeps them cleanly separated. Symlinked `node_modules` saves ~40% disk vs npm.
 - **Turborepo**: Adds build orchestration on top of pnpm. Understands package dependency graph, runs builds in correct order, caches results. Config is a single `turbo.json` — minimal overhead for the team.
 
-**Go module management**: The `server/` directory is a standalone Go module (`go mod init token-town/server`). It is NOT managed by pnpm or Turborepo. Instead:
+**Go module management**: The `apps/servers/game-server/` directory is a standalone Go module (`go mod init token-town/server`). It is NOT managed by pnpm or Turborepo. Instead:
 - `go build ./cmd/server` for production binary
 - `go test ./...` for tests
 - `make dev` for local development (uses `air` for hot reload)
@@ -159,6 +109,7 @@ token-town/
 ```yaml
 packages:
   - "packages/*"
+  - "apps/clients/*"
 ```
 
 ### `turbo.json`
@@ -433,28 +384,27 @@ type CoinsUpdateEvent struct {
 ```
 shared (no deps)
   ↓
-game-client (depends on shared)
-  ↓
-vscode-extension (depends on shared; embeds game-client dist)
+vscode-extension (depends on shared; webview-ui built inline via Vite)
+admin-panel (depends on shared)
 
-server/ (Go module, independent of pnpm graph)
+game-server (Go module, independent of pnpm graph)
 ```
 
 ### Build Order (handled by Turborepo `^build`)
 
 1. `@token-town/shared` — tsc → `dist/` (ESM + CJS dual output, `.d.ts` declarations)
-2. `server/` — `go build ./cmd/server` → `server` binary (parallel with step 1)
-3. `@token-town/game-client` — vite build → `dist/`
-4. `@token-town/vscode-extension` — esbuild → `dist/extension.js`
+2. `apps/servers/game-server` — `go build ./cmd/server` → `server` binary (parallel with step 1)
+3. `@token-town/admin-panel` — ng build → `dist/`
+4. `@token-town/vscode-extension` — esbuild (extension) + vite (webview-ui) → `dist/`
 
 ### Per-Package Build Tools
 
 | Package | Build Tool | Output | Why |
 |---------|-----------|--------|-----|
 | shared | tsc (declarations + js) | `dist/` ESM | Consumed as dependency, needs .d.ts |
-| server (Go) | `go build` | binary `server` | Single static binary, no runtime deps |
-| game-client | Vite + React plugin | `dist/` (static files) | Browser target, needs HMR in dev |
-| vscode-extension | esbuild (custom script) | `dist/extension.js` | VS Code requires single CJS bundle |
+| game-server (Go) | `go build` | binary `server` | Single static binary, no runtime deps |
+| vscode-extension | esbuild (extension) + Vite (webview-ui) | `dist/extension.js` + `dist/webview/` | VS Code requires single CJS bundle; webview is browser target |
+| admin-panel | Angular CLI (ng build) | `dist/` (static files) | Browser target, standalone Angular app |
 
 ### Shared tsconfig
 
@@ -492,37 +442,35 @@ Each package extends this with its own `outDir`, `rootDir`, and `references`.
    - `webview-ui/src/office/types.ts` → room/furniture types
    - `src/types.ts` → agent state types
    - New multiplayer and economy types
-5. Create `packages/economy-engine/` with stub implementations
 
 **The existing code continues to work unchanged during this phase.**
 
-### Phase 2: Move existing code into packages
+### Phase 2: Move existing code into apps/
 
-1. Move `src/` → `packages/vscode-extension/src/`
-2. Move `webview-ui/` → `packages/game-client/`
-3. Update import paths to use `@token-town/shared`
-4. Update `esbuild.js` to resolve workspace dependencies
-5. Update Vite config for new location
-6. Verify the extension builds and runs identically
+1. Move `src/` + `webview-ui/` → `apps/clients/vscode-extension/`
+2. Update import paths to use `@token-town/shared`
+3. Update `esbuild.js` to resolve workspace dependencies
+4. Update Vite config for new location
+5. Verify the extension builds and runs identically
 
 **Key risk**: VS Code extension packaging (`.vsix`) must bundle all dependencies. The esbuild config already bundles everything into a single file, so workspace deps get inlined — no runtime resolution issues.
 
-### Phase 3: Add Go game-server
+### Phase 3: Add Go game-server + Angular admin panel
 
-1. `go mod init token-town/server` in `server/`
+1. `go mod init token-town/server` in `apps/servers/game-server/`
 2. Implement WebSocket hub with `gorilla/websocket`
 3. Add REST endpoints with `chi` router
 4. Implement economy logic in `internal/economy/`
-5. Set up `sqlc` with SQLite schema
-6. Add `connection.ts` and `sync.ts` to game-client for multiplayer
+5. Set up `sqlc` with PostgreSQL schema
+6. Scaffold Angular 19+ admin panel in `apps/clients/admin-panel/` with MSAL
 7. Add `tokenReporter.ts` to vscode-extension to report usage to Go server
 
 ### Phase 4: Clean up
 
-1. Remove old root `src/` and `webview-ui/` (now under packages/)
+1. Remove old root `src/` and `webview-ui/` (now under `apps/clients/vscode-extension/`)
 2. Update CI/CD for monorepo build
 3. Update CLAUDE.md to reflect new structure
-4. Move `scripts/` asset pipeline tools under a `tools/` or keep at root
+4. Keep `scripts/` asset pipeline at root
 
 ### What NOT to Migrate
 
@@ -534,26 +482,29 @@ Each package extends this with its own `outDir`, `rootDir`, and `references`.
 ## 7. Development Workflow
 
 ```bash
-# Install all dependencies
+# Instalar todas las dependencias (TypeScript packages)
 pnpm install
 
-# Build everything (respects dependency order)
+# Build de todos los paquetes TypeScript (respeta orden de dependencias)
 pnpm build
 
-# Dev mode (all packages in parallel)
-pnpm dev
+# Dev mode: extensión VS Code
+pnpm --filter @token-town/vscode-extension compile
 
-# Build only the extension
-pnpm --filter @token-town/vscode-extension build
+# Dev mode: admin panel Angular
+pnpm --filter @token-town/admin-panel start
 
-# Run Go game server locally
-cd server && make dev
+# Build del servidor Go
+cd apps/servers/game-server && make build
+
+# Dev mode: servidor Go (con hot reload via air)
+cd apps/servers/game-server && make dev
+
+# Type-check todo
+pnpm check-types
 
 # Add a dependency to a specific package
-pnpm --filter @token-town/game-client add some-lib
-
-# Type-check all packages
-pnpm check-types
+pnpm --filter @token-town/vscode-extension add some-lib
 ```
 
 ## 8. Key Decisions
@@ -562,10 +513,12 @@ pnpm check-types
 
 2. **Turborepo over Nx**: Turbo is lighter, config-over-code, and purpose-built for the TS monorepo use case. Nx would be justified at 15+ packages with custom generators — overkill here.
 
-3. **Economy logic colocated in server/**: Economy rules (pricing, conversion rates, purchase validation) live in `server/internal/economy/` as pure functions with no I/O. This keeps them testable in isolation while avoiding a separate package boundary. Go's static typing provides the same safety guarantees as a separate TypeScript library.
+3. **Economy logic colocated in game-server**: Economy rules (pricing, conversion rates, purchase validation) live in `apps/servers/game-server/internal/economy/` as pure functions with no I/O. This keeps them testable in isolation while avoiding a separate package boundary. Go's static typing provides the same safety guarantees as a separate TypeScript library.
 
-4. **game-client stays as Vite project**: The React webview already uses Vite. No reason to change this. The vscode-extension copies the built output into its dist folder (same pattern as today).
+4. **webview-ui stays inside vscode-extension**: The React webview (`webview-ui/`) is a subdirectory of the extension package, not a separate workspace package. It uses Vite for building and the extension copies the built output into its dist folder. This avoids an extra package boundary for tightly coupled code.
 
 5. **shared uses tsc, not a bundler**: It's consumed by other packages at build time. Bundling a shared library is unnecessary and makes debugging harder. Type declarations (`.d.ts`) are essential.
 
 6. **No lerna**: Lerna is effectively deprecated in favor of pnpm workspaces + turborepo. It adds complexity without benefits for this stack.
+
+7. **apps/ directory with clients/ and servers/ subdivisions**: Separates deployable applications from shared libraries (`packages/`). The `clients/` vs `servers/` split makes deployment targets immediately obvious.

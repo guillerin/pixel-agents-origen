@@ -46,3 +46,14 @@ target/
 *.flv
 *.mov
 *.wmv
+
+# ─── Monorepo ────────────────────────────────────────────────────────────────
+.turbo/
+apps/clients/vscode-extension/dist/
+apps/clients/vscode-extension/node_modules/
+apps/clients/vscode-extension/webview-ui/node_modules/
+apps/clients/admin-panel/dist/
+apps/clients/admin-panel/node_modules/
+apps/servers/game-server/bin/
+packages/shared/dist/
+packages/shared/node_modules/

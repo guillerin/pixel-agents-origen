@@ -1,0 +1,27 @@
+{
+	"extends": "../../../tsconfig.base.json",
+	"compilerOptions": {
+		"module": "Node16",
+		"moduleResolution": "Node16",
+		"target": "ES2022",
+		"lib": [
+			"ES2022"
+		],
+		"sourceMap": true,
+		"rootDir": "src",
+		"strict": true,
+		"verbatimModuleSyntax": false,
+		"erasableSyntaxOnly": false,
+		"declaration": false,
+		"declarationMap": false,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false
+	},
+	"exclude": [
+		"node_modules",
+		"webview-ui",
+		"dist",
+		"out",
+		"scripts"
+	]
+}

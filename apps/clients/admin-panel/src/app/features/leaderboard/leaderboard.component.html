@@ -1,0 +1,13 @@
+<h1>Leaderboard</h1>
+<table>
+  <thead><tr><th>Rank</th><th>Player</th><th>Total Coins Earned</th></tr></thead>
+  <tbody>
+    @for (entry of entries(); track entry.userId) {
+      <tr>
+        <td class="rank">#{{ entry.rank }}</td>
+        <td>{{ entry.displayName }}</td>
+        <td class="coin">{{ entry.totalCoinsEarned | number }}</td>
+      </tr>
+    }
+  </tbody>
+</table>
