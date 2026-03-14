@@ -6,6 +6,31 @@ const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
 
 /**
+ * Copy a single file, ensuring the destination directory exists
+ */
+function copyFile(src, dst) {
+  fs.mkdirSync(path.dirname(dst), { recursive: true });
+  fs.writeFileSync(dst, fs.readFileSync(src));
+}
+
+/**
+ * Recursively copy a directory using readdir/readFile/writeFile
+ * to avoid fs.cpSync issues with unicode paths on Windows
+ */
+function copyDirRecursive(src, dst) {
+  fs.mkdirSync(dst, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const srcPath = path.join(src, entry.name);
+    const dstPath = path.join(dst, entry.name);
+    if (entry.isDirectory()) {
+      copyDirRecursive(srcPath, dstPath);
+    } else {
+      copyFile(srcPath, dstPath);
+    }
+  }
+}
+
+/**
  * Copy assets folder to dist/assets
  */
 function copyAssets() {
@@ -13,13 +38,7 @@ function copyAssets() {
   const dstDir = path.join(__dirname, 'dist', 'assets');
 
   if (fs.existsSync(srcDir)) {
-    // Remove existing dist/assets if present
-    if (fs.existsSync(dstDir)) {
-      fs.rmSync(dstDir, { recursive: true });
-    }
-
-    // Copy recursively
-    fs.cpSync(srcDir, dstDir, { recursive: true });
+    copyDirRecursive(srcDir, dstDir);
     console.log('✓ Copied assets/ → dist/assets/');
   } else {
     console.log('ℹ️  assets/ folder not found (optional)');

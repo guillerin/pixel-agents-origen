@@ -16,7 +16,13 @@ import {
 } from './timerManager.js';
 import type { AgentState } from './types.js';
 
-export const PERMISSION_EXEMPT_TOOLS = new Set(['Task', 'AskUserQuestion']);
+export const PERMISSION_EXEMPT_TOOLS = new Set([
+  'Task',
+  'AskUserQuestion',
+  'Agent',
+  'TeamCreate',
+  'SendMessage',
+]);
 
 export function formatToolStatus(toolName: string, input: Record<string, unknown>): string {
   const base = (p: unknown) => (typeof p === 'string' ? path.basename(p) : '');
@@ -44,6 +50,23 @@ export function formatToolStatus(toolName: string, input: Record<string, unknown
       return desc
         ? `Subtask: ${desc.length > TASK_DESCRIPTION_DISPLAY_MAX_LENGTH ? desc.slice(0, TASK_DESCRIPTION_DISPLAY_MAX_LENGTH) + '\u2026' : desc}`
         : 'Running subtask';
+    }
+    case 'Agent': {
+      const prompt = typeof input.prompt === 'string' ? input.prompt : '';
+      const desc = typeof input.description === 'string' ? input.description : prompt;
+      return desc
+        ? `Subtask: ${desc.length > TASK_DESCRIPTION_DISPLAY_MAX_LENGTH ? desc.slice(0, TASK_DESCRIPTION_DISPLAY_MAX_LENGTH) + '\u2026' : desc}`
+        : 'Subtask: Agent';
+    }
+    case 'TeamCreate': {
+      const name = typeof input.name === 'string' ? input.name : '';
+      return name ? `Subtask: ${name}` : 'Subtask: Team';
+    }
+    case 'SendMessage': {
+      const msg = typeof input.message === 'string' ? input.message : '';
+      return msg
+        ? `Subtask: ${msg.length > TASK_DESCRIPTION_DISPLAY_MAX_LENGTH ? msg.slice(0, TASK_DESCRIPTION_DISPLAY_MAX_LENGTH) + '\u2026' : msg}`
+        : 'Subtask: Message';
     }
     case 'AskUserQuestion':
       return 'Waiting for your answer';
@@ -125,8 +148,14 @@ export function processTranscriptLine(
             if (block.type === 'tool_result' && block.tool_use_id) {
               console.log(`[Pixel Agents] Agent ${agentId} tool done: ${block.tool_use_id}`);
               const completedToolId = block.tool_use_id;
-              // If the completed tool was a Task, clear its subagent tools
-              if (agent.activeToolNames.get(completedToolId) === 'Task') {
+              // If the completed tool was a subagent-spawning tool, clear its subagent character
+              const completedToolName = agent.activeToolNames.get(completedToolId);
+              const isSubagentTool =
+                completedToolName === 'Task' ||
+                completedToolName === 'Agent' ||
+                completedToolName === 'TeamCreate' ||
+                completedToolName === 'SendMessage';
+              if (isSubagentTool) {
                 agent.activeSubagentToolIds.delete(completedToolId);
                 agent.activeSubagentToolNames.delete(completedToolId);
                 webview?.postMessage({
@@ -220,8 +249,14 @@ function processProgressRecord(
     return;
   }
 
-  // Verify parent is an active Task tool (agent_progress handling)
-  if (agent.activeToolNames.get(parentToolId) !== 'Task') return;
+  // Verify parent is an active subagent-spawning tool (agent_progress handling)
+  const parentToolName = agent.activeToolNames.get(parentToolId);
+  const isSubagentParent =
+    parentToolName === 'Task' ||
+    parentToolName === 'Agent' ||
+    parentToolName === 'TeamCreate' ||
+    parentToolName === 'SendMessage';
+  if (!isSubagentParent) return;
 
   const msg = data.message as Record<string, unknown> | undefined;
   if (!msg) return;

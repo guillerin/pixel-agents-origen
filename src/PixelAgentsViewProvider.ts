@@ -262,9 +262,30 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
         }
         sendExistingAgents(this.agents, this.context, this.webview);
       } else if (message.type === 'openSessionsFolder') {
-        const projectDir = getProjectDirPath();
-        if (projectDir && fs.existsSync(projectDir)) {
-          vscode.env.openExternal(vscode.Uri.file(projectDir));
+        // Try the current workspace folder first
+        const workspaceProjectDir = getProjectDirPath();
+        if (workspaceProjectDir && fs.existsSync(workspaceProjectDir)) {
+          vscode.env.openExternal(vscode.Uri.file(workspaceProjectDir));
+        } else {
+          // Workspace dir not found — let the user pick any folder
+          const picked = await vscode.window.showOpenDialog({
+            canSelectFolders: true,
+            canSelectFiles: false,
+            canSelectMany: false,
+            openLabel: 'Open Session Folder',
+            title: 'Select a project folder to find its Claude sessions',
+          });
+          if (picked && picked.length > 0) {
+            const selectedPath = picked[0].fsPath;
+            const projectDir = getProjectDirPath(selectedPath);
+            if (projectDir && fs.existsSync(projectDir)) {
+              vscode.env.openExternal(vscode.Uri.file(projectDir));
+            } else {
+              vscode.window.showWarningMessage(
+                `Pixel Agents: No Claude session found for "${selectedPath}". Expected: ${projectDir ?? 'unknown'}`,
+              );
+            }
+          }
         }
       } else if (message.type === 'exportLayout') {
         const layout = readLayoutFromFile();
