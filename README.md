@@ -27,7 +27,7 @@ Pixel Agents turns multi-agent AI systems into something you can actually see an
 
 Right now it works as a VS Code extension with Claude Code. The vision though, is a fully agent-agnostic, platform-agnostic interface for orchestrating any AI agents, deployable anywhere.
 
-This is the source code for the free [Pixel Agents extension for VS Code](https://marketplace.visualstudio.com/items?itemName=pablodelucca.pixel-agents) — you can install it directly from the marketplace with the full furniture catalog included.
+This is the source code for the free Pixel Agents extension for VS Code — install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=pablodelucca.pixel-agents) or [Open VSX](https://open-vsx.org/extension/pablodelucca/pixel-agents) with the full furniture catalog included.
 
 ![Pixel Agents screenshot](webview-ui/public/Screenshot.jpg)
 
@@ -48,7 +48,7 @@ This is the source code for the free [Pixel Agents extension for VS Code](https:
 
 ## Requirements
 
-- VS Code 1.109.0 or later
+- VS Code 1.105.0 or later
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) installed and configured
 
 ## Getting Started
@@ -89,19 +89,15 @@ The grid is expandable up to 64×64 tiles. Click the ghost border outside the cu
 
 ### Office Assets
 
-**Free assets are COMING VERY SOON!**
+All office assets (furniture, floors, walls) are now **fully open-source** and included in this repository under `webview-ui/public/assets/`. No external purchases or imports are needed — everything works out of the box.
 
-The office tileset currently used in this project and available via the extension is **[Office Interior Tileset (16x16)](https://donarg.itch.io/officetileset)** by **Donarg**, available on itch.io for **$2 USD**.
+Each furniture item lives in its own folder under `assets/furniture/` with a `manifest.json` that declares its sprites, rotation groups, state groups (on/off), and animation frames. Floor tiles are individual PNGs in `assets/floors/`, and wall tile sets are in `assets/walls/`. This modular structure makes it easy to add, remove, or modify assets without touching any code.
 
-This is the only part of the project that is currently not freely available. The tileset is not included in this repository due to its license. To use Pixel Agents locally with the full set of office furniture and decorations, purchase the tileset and run the asset import pipeline:
+To add a new furniture item, create a folder in `webview-ui/public/assets/furniture/` with your PNG sprite(s) and a `manifest.json`, then rebuild. The asset manager (`scripts/asset-manager.html`) provides a visual editor for creating and editing manifests.
 
-```bash
-npm run import-tileset
-```
+Detailed documentation on the manifest format and asset pipeline is coming soon.
 
-Fair warning: the import pipeline is not exactly straightforward — the out-of-the-box tileset assets aren't the easiest to work with, and while I've done my best to make the process as smooth as possible, it may require some manual tweaking. If you have experience creating pixel art office assets and would like to contribute freely usable tilesets for the community, that would be hugely appreciated.
-
-The extension will still work without the tileset — you'll get the default characters and basic layout, but the full furniture catalog requires the imported assets.
+Characters are based on the amazing work of [JIK-A-4, Metro City](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack).
 
 ## How It Works
 

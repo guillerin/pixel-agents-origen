@@ -135,9 +135,14 @@ function App() {
     subagentTools,
     subagentCharacters,
     layoutReady,
+    layoutWasReset,
     loadedAssets,
     workspaceFolders,
   } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty);
+
+  // Show migration notice once layout reset is detected
+  const [migrationNoticeDismissed, setMigrationNoticeDismissed] = useState(false);
+  const showMigrationNotice = layoutWasReset && !migrationNoticeDismissed;
 
   const [isDebugMode, setIsDebugMode] = useState(false);
 
@@ -226,6 +231,7 @@ function App() {
           50% { opacity: 0.3; }
         }
         .pixel-agents-pulse { animation: pixel-agents-pulse ${PULSE_ANIMATION_DURATION_SEC}s ease-in-out infinite; }
+        .pixel-agents-migration-btn:hover { filter: brightness(0.8); }
       `}</style>
 
       <OfficeCanvas
@@ -245,7 +251,7 @@ function App() {
         panRef={editor.panRef}
       />
 
-      <ZoomControls zoom={editor.zoom} onZoomChange={editor.handleZoomChange} />
+      {!isDebugMode && <ZoomControls zoom={editor.zoom} onZoomChange={editor.handleZoomChange} />}
 
       {/* Vignette overlay */}
       <div
@@ -275,9 +281,9 @@ function App() {
         <div
           style={{
             position: 'absolute',
-            top: 8,
+            top: editor.isDirty ? 52 : 8,
             left: '50%',
-            transform: editor.isDirty ? 'translateX(calc(-50% + 100px))' : 'translateX(-50%)',
+            transform: 'translateX(-50%)',
             zIndex: 49,
             background: 'var(--pixel-hint-bg)',
             color: '#fff',
@@ -290,7 +296,7 @@ function App() {
             whiteSpace: 'nowrap',
           }}
         >
-          Press <b>R</b> to rotate
+          Rotate (R)
         </div>
       )}
 
@@ -310,10 +316,12 @@ function App() {
               selectedFurnitureColor={selColor}
               floorColor={editorState.floorColor}
               wallColor={editorState.wallColor}
+              selectedWallSet={editorState.selectedWallSet}
               onToolChange={editor.handleToolChange}
               onTileTypeChange={editor.handleTileTypeChange}
               onFloorColorChange={editor.handleFloorColorChange}
               onWallColorChange={editor.handleWallColorChange}
+              onWallSetChange={editor.handleWallSetChange}
               onSelectedFurnitureColorChange={editor.handleSelectedFurnitureColorChange}
               onFurnitureTypeChange={editor.handleFurnitureTypeChange}
               loadedAssets={loadedAssets}
@@ -321,16 +329,18 @@ function App() {
           );
         })()}
 
-      <ToolOverlay
-        officeState={officeState}
-        agents={agents}
-        agentTools={agentTools}
-        subagentCharacters={subagentCharacters}
-        containerRef={containerRef}
-        zoom={editor.zoom}
-        panRef={editor.panRef}
-        onCloseAgent={handleCloseAgent}
-      />
+      {!isDebugMode && (
+        <ToolOverlay
+          officeState={officeState}
+          agents={agents}
+          agentTools={agentTools}
+          subagentCharacters={subagentCharacters}
+          containerRef={containerRef}
+          zoom={editor.zoom}
+          panRef={editor.panRef}
+          onCloseAgent={handleCloseAgent}
+        />
+      )}
 
       {isDebugMode && (
         <DebugView
@@ -341,6 +351,69 @@ function App() {
           subagentTools={subagentTools}
           onSelectAgent={handleSelectAgent}
         />
+      )}
+
+      {showMigrationNotice && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+          }}
+          onClick={() => setMigrationNoticeDismissed(true)}
+        >
+          <div
+            style={{
+              background: 'var(--pixel-bg)',
+              border: '2px solid var(--pixel-border)',
+              borderRadius: 0,
+              padding: '24px 32px',
+              maxWidth: 620,
+              boxShadow: 'var(--pixel-shadow)',
+              textAlign: 'center',
+              lineHeight: 1.3,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: '40px', marginBottom: 12, color: 'var(--pixel-accent)' }}>
+              We owe you an apology!
+            </div>
+            <p style={{ fontSize: '26px', color: 'var(--pixel-text)', margin: '0 0 12px 0' }}>
+              We've just migrated to fully open-source assets, all built from scratch with love.
+              Unfortunately, this means your previous layout had to be reset.
+            </p>
+            <p style={{ fontSize: '26px', color: 'var(--pixel-text)', margin: '0 0 12px 0' }}>
+              We're really sorry about that.
+            </p>
+            <p style={{ fontSize: '26px', color: 'var(--pixel-text)', margin: '0 0 12px 0' }}>
+              The good news? This was a one-time thing, and it paves the way for some genuinely
+              exciting updates ahead.
+            </p>
+            <p style={{ fontSize: '26px', color: 'var(--pixel-text-dim)', margin: '0 0 20px 0' }}>
+              Stay tuned, and thanks for using Pixel Agents!
+            </p>
+            <button
+              className="pixel-agents-migration-btn"
+              style={{
+                padding: '6px 24px 8px',
+                fontSize: '30px',
+                background: 'var(--pixel-accent)',
+                color: '#fff',
+                border: '2px solid var(--pixel-accent)',
+                borderRadius: 0,
+                cursor: 'pointer',
+                boxShadow: 'var(--pixel-shadow)',
+              }}
+              onClick={() => setMigrationNoticeDismissed(true)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

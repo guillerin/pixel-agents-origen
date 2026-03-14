@@ -45,7 +45,8 @@ export function formatToolStatus(toolName: string, input: Record<string, unknown
       return 'Fetching web content';
     case 'WebSearch':
       return 'Searching the web';
-    case 'Task': {
+    case 'Task':
+    case 'Agent': {
       const desc = typeof input.description === 'string' ? input.description : '';
       return desc
         ? `Subtask: ${desc.length > TASK_DESCRIPTION_DISPLAY_MAX_LENGTH ? desc.slice(0, TASK_DESCRIPTION_DISPLAY_MAX_LENGTH) + '\u2026' : desc}`
