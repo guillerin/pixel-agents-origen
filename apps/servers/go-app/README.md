@@ -10,19 +10,19 @@ WebSocket + REST server for Token Town, a multiplayer office game built on top o
 ## Quick Start
 
 ```bash
-# Run database migrations
-psql $DATABASE_URL -f internal/db/schema.sql
+# Start dev infrastructure (PostgreSQL + Redis)
+yarn docker:up
 
 # Start the server
-make dev
+yarn dev:server
 ```
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `PORT` | `8080` | HTTP server port |
-| `DATABASE_URL` | `postgres://postgres:postgres@localhost:5432/tokentown?sslmode=disable` | PostgreSQL connection string |
+| `PORT` | `30000` | HTTP server port |
+| `DATABASE_URL` | `postgres://postgres:postgres@localhost:30001/tokentown?sslmode=disable` | PostgreSQL connection string |
 | `TOKEN_SIGNING_KEY` | `dev-signing-key-change-in-production` | HMAC key for session tokens |
 
 ## API Endpoints

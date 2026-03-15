@@ -1,0 +1,15 @@
+{
+  "name": "@token-town/go-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "go build -o bin/server ./cmd/server",
+    "dev": "go run ./cmd/server",
+    "test": "go test ./...",
+    "lint": "golangci-lint run ./...",
+    "clean": "rm -rf bin/",
+    "tidy": "go mod tidy",
+    "migrate:up": "echo 'Run: migrate -database $DATABASE_URL -path internal/db/migrations up'",
+    "migrate:down": "echo 'Run: migrate -database $DATABASE_URL -path internal/db/migrations down'"
+  }
+}

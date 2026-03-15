@@ -20,11 +20,11 @@ func main() {
 	// Config
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "30000"
 	}
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		dbURL = "postgres://postgres:postgres@localhost:5432/tokentown?sslmode=disable"
+		dbURL = "postgres://postgres:postgres@localhost:30001/tokentown?sslmode=disable"
 	}
 
 	// Database
