@@ -1,72 +1,92 @@
-// See https://go.microsoft.com/fwlink/?LinkId=733558
-// for the documentation about the tasks.json format
 {
 	"version": "2.0.0",
 	"tasks": [
 		{
-            "label": "watch",
-            "dependsOn": [
-                "npm: watch:tsc",
-                "npm: watch:esbuild"
-            ],
-            "presentation": {
-                "reveal": "never"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "type": "npm",
-            "script": "watch:esbuild",
-            "group": "build",
-            "problemMatcher": {
-                "owner": "esbuild",
-                "fileLocation": "absolute",
-                "pattern": {
-                    "regexp": "✘ \\[ERROR\\] (.+?)\\n\\s+(.+?):(\\d+):(\\d+):",
-                    "message": 1,
-                    "file": 2,
-                    "line": 3,
-                    "column": 4
-                },
-                "background": {
-                    "activeOnStart": true,
-                    "beginsPattern": "\\[watch\\] build started",
-                    "endsPattern": "\\[watch\\] build finished"
-                }
-            },
-            "isBackground": true,
-            "label": "npm: watch:esbuild",
-            "presentation": {
-                "group": "watch",
-                "reveal": "never"
-            }
-        },
+			"label": "Install All Dependencies",
+			"type": "shell",
+			"command": "yarn install",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
 		{
-            "type": "npm",
-            "script": "watch:tsc",
-            "group": "build",
-            "problemMatcher": "$tsc-watch",
-            "isBackground": true,
-            "label": "npm: watch:tsc",
-            "presentation": {
-                "group": "watch",
-                "reveal": "never"
-            }
-        },
-        {
-            "label": "Run CI (act)",
-            "type": "shell",
-            "command": "act push -j ci --container-architecture linux/amd64",
-            "group": "test",
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "clear": true
-            },
-            "problemMatcher": []
-        }
+			"label": "Install Webview Dependencies",
+			"type": "shell",
+			"command": "npm install",
+			"options": {
+				"cwd": "${workspaceFolder}/apps/clients/vscode-extension/webview-ui"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Extension: Build",
+			"type": "shell",
+			"command": "yarn workspace @token-town/vscode-extension run build",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Extension: Watch",
+			"type": "shell",
+			"command": "yarn workspace @token-town/vscode-extension run watch",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "build",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "never",
+				"panel": "dedicated"
+			},
+			"problemMatcher": {
+				"owner": "esbuild",
+				"fileLocation": "absolute",
+				"pattern": {
+					"regexp": "✘ \\[ERROR\\] (.+?)\\n\\s+(.+?):(\\d+):(\\d+):",
+					"message": 1,
+					"file": 2,
+					"line": 3,
+					"column": 4
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "\\[watch\\] build started",
+					"endsPattern": "\\[watch\\] build finished"
+				}
+			}
+		},
+		{
+			"label": "Admin Panel: Dev",
+			"type": "shell",
+			"command": "yarn workspace @token-town/admin-panel run dev",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			},
+			"problemMatcher": []
+		}
 	]
 }
