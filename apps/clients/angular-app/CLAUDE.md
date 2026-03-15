@@ -47,8 +47,8 @@ All API calls go through `AdminApiService` which targets the game-server REST en
 ## Build
 
 ```sh
-yarn workspace @token-town/admin-panel run build   # Production build
-yarn workspace @token-town/admin-panel run dev     # Dev server (ng serve)
+yarn workspace @token-town/angular-app run build   # Production build
+yarn workspace @token-town/angular-app run dev     # Dev server (ng serve)
 ```
 
 ## CLAUDE.md Maintenance
