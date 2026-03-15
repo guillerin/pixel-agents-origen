@@ -15,8 +15,16 @@
     "clean": "yarn workspaces foreach -A run clean",
     "build:extension": "yarn workspace @token-town/vscode-extension run build",
     "watch:extension": "yarn workspace @token-town/vscode-extension run watch",
-    "build:admin": "yarn workspace @token-town/admin-panel run build",
-    "dev:admin": "yarn workspace @token-town/admin-panel run dev"
+    "build:admin": "yarn workspace @token-town/angular-app run build",
+    "dev:admin": "yarn workspace @token-town/angular-app run dev",
+    "build:server": "yarn workspace @token-town/go-app run build",
+    "dev:server": "yarn workspace @token-town/go-app run dev",
+    "test:server": "yarn workspace @token-town/go-app run test",
+    "docker:up": "docker compose -f infrastructure/dockers/development/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infrastructure/dockers/development/docker-compose.yml down",
+    "docker:logs": "docker compose -f infrastructure/dockers/development/docker-compose.yml logs -f",
+    "docker:reset": "docker compose -f infrastructure/dockers/development/docker-compose.yml down -v && docker compose -f infrastructure/dockers/development/docker-compose.yml up -d",
+    "deploy": "npx tsx infrastructure/scripts/deploy.ts"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

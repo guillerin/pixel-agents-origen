@@ -75,18 +75,96 @@
 			}
 		},
 		{
-			"label": "Admin Panel: Dev",
+			"label": "Angular App: Dev",
 			"type": "shell",
-			"command": "yarn workspace @token-town/admin-panel run dev",
+			"command": "yarn workspace @token-town/angular-app run dev",
 			"options": {
 				"cwd": "${workspaceFolder}"
 			},
 			"isBackground": true,
 			"presentation": {
 				"reveal": "always",
-				"panel": "dedicated"
+				"panel": "dedicated",
+				"group": "frontend"
 			},
 			"problemMatcher": []
+		},
+		{
+			"label": "Docker: Up",
+			"type": "shell",
+			"command": "docker compose -f infrastructure/dockers/development/docker-compose.yml up -d && docker compose -f infrastructure/dockers/development/docker-compose.yml exec postgres pg_isready -U postgres -d tokentown -q || echo 'Waiting for DB...'",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"group": "backend"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Docker: Down",
+			"type": "shell",
+			"command": "yarn docker:down",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Go App: Dev",
+			"type": "shell",
+			"command": "yarn workspace @token-town/go-app run dev",
+			"dependsOn": ["Docker: Up"],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"group": "backend"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy (interactive)",
+			"type": "shell",
+			"command": "npx tsx infrastructure/scripts/deploy.ts",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"focus": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Start: Frontend",
+			"dependsOn": ["Angular App: Dev"],
+			"problemMatcher": []
+		},
+		{
+			"label": "Start: Backend",
+			"dependsOn": ["Go App: Dev"],
+			"problemMatcher": []
+		},
+		{
+			"label": "Start: Client + Server",
+			"dependsOn": ["Angular App: Dev", "Go App: Dev"],
+			"dependsOrder": "parallel",
+			"problemMatcher": [],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			}
 		}
 	]
 }
