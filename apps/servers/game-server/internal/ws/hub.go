@@ -1,13 +1,26 @@
 package ws
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
 
 	"github.com/gorilla/websocket"
+
+	"token-town/server/internal/economy"
 )
+
+// RoomManager provides room state operations (implemented by rooms.Manager)
+type RoomManager interface {
+	EnsureRoom(roomID, ownerID string)
+	Join(roomID, userID string)
+	Leave(roomID, userID string)
+	BuildSnapshotJSON(ctx context.Context, roomID string) ([]byte, error)
+}
+
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -27,6 +40,13 @@ type Hub struct {
 	register   chan *Client
 	unregister chan *Client
 	broadcast  chan RoomMessage
+
+	// RoomMgr provides room state queries (snapshots, occupants)
+	RoomMgr RoomManager
+	// DB for direct queries (room saves, etc.)
+	DB *sql.DB
+	// Shop handles purchase operations
+	Shop *economy.ShopService
 }
 
 // RoomMessage is a message to be broadcast to a room
@@ -59,6 +79,20 @@ func (h *Hub) Run() {
 			h.mu.Unlock()
 			log.Printf("[hub] client registered: user=%s room=%s", client.UserID, client.RoomID)
 
+			// Join room in room manager and notify others
+			if h.RoomMgr != nil {
+				h.RoomMgr.EnsureRoom(client.RoomID, client.UserID)
+				h.RoomMgr.Join(client.RoomID, client.UserID)
+			}
+			h.BroadcastToRoom(client.RoomID, EventPresenceJoined, PresencePayload{
+				UserID:      client.UserID,
+				DisplayName: client.UserID, // TODO: fetch display name from DB
+				RoomID:      client.RoomID,
+			}, client)
+
+			// Send initial room snapshot
+			go client.sendRoomSnapshot()
+
 		case client := <-h.unregister:
 			h.mu.Lock()
 			if room, ok := h.rooms[client.RoomID]; ok {
@@ -72,6 +106,15 @@ func (h *Hub) Run() {
 			}
 			h.mu.Unlock()
 			log.Printf("[hub] client unregistered: user=%s room=%s", client.UserID, client.RoomID)
+
+			// Leave room in room manager and notify others
+			if h.RoomMgr != nil {
+				h.RoomMgr.Leave(client.RoomID, client.UserID)
+			}
+			h.BroadcastToRoom(client.RoomID, EventPresenceLeft, PresencePayload{
+				UserID: client.UserID,
+				RoomID: client.RoomID,
+			}, nil)
 
 		case msg := <-h.broadcast:
 			h.mu.RLock()

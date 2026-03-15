@@ -44,32 +44,32 @@ Token Town es una extensión de VS Code que transforma el trabajo con Claude Cod
 - [x] Esquema PostgreSQL completo
 
 ### v1.1 — Economía
-- [ ] Extracción de token usage desde JSONL de Claude Code
-- [ ] Envío de token reports al servidor
-- [ ] Cálculo de coins server-side
+- [x] Extracción de token usage desde JSONL de Claude Code (`tokenReporter.ts`)
+- [x] Envío de token reports al servidor (REST batch 10s + offline queue)
+- [x] Cálculo de coins server-side (`economy/coins.go`, `EarnCoinsWithDedup`)
 - [ ] Coin counter en la webview del juego
-- [ ] Sistema de transacciones con ledger append-only
+- [x] Sistema de transacciones con ledger append-only (`transactions` table, `wallet.go`)
 
 ### v1.2 — Multijugador
-- [ ] Autenticación con machineId + sesión firmada (HMAC-SHA256)
-- [ ] WebSocket hub con rooms por usuario
-- [ ] Broadcast de estado de agentes a otros usuarios
-- [ ] Sincronización de layouts de sala
-- [ ] Presencia: ver quién está conectado
+- [x] Autenticación con machineId + sesión firmada (HMAC-SHA256) (`auth/tokens.go`)
+- [x] WebSocket hub con rooms por usuario (`ws/hub.go`, `rooms/manager.go`)
+- [x] Broadcast de estado de agentes a otros usuarios (`agentBroadcaster.ts`, `ws/client.go`)
+- [x] Sincronización de layouts de sala (`room:saveLayout` WS handler)
+- [x] Presencia: ver quién está conectado (room snapshots on connect)
 
 ### v1.3 — Tienda
-- [ ] Catálogo de items desde `furniture-catalog.json` existente
+- [x] Catálogo de items desde `furniture-catalog.json` existente (`api/shop.go`)
 - [ ] Modal de tienda en la webview
-- [ ] Compra de items con deducción de coins
-- [ ] Inventario por usuario
-- [ ] Sistema de rareza (Common/Uncommon/Rare/Legendary)
+- [x] Compra de items con deducción de coins (`economy/shop.go`, `shop:purchase` WS handler)
+- [x] Inventario por usuario (`inventory` table, `api/inventory.go`)
+- [x] Sistema de rareza (Common/Uncommon/Rare/Legendary) — en esquema DB
 
 ### v1.4 — Admin Panel
-- [ ] Dashboard con estadísticas globales
-- [ ] Gestión de usuarios y ajuste manual de coins
-- [ ] Gestión del catálogo de tienda (precios, disponibilidad)
-- [ ] Leaderboard global
-- [ ] Autenticación Microsoft SSO
+- [x] Dashboard con estadísticas globales (con datos en tiempo real vía WebSocket)
+- [x] Gestión de usuarios y ajuste manual de coins (`api/admin.go`)
+- [x] Gestión del catálogo de tienda (precios, disponibilidad)
+- [x] Leaderboard global con ranking por usuario (`api/leaderboard.go`)
+- [x] Autenticación Microsoft SSO (MSAL configurado en `app.config.ts`)
 
 ### v2.0 — Expansión de Espacios
 - [ ] Sistema de habitaciones: cada usuario puede tener múltiples habitaciones
@@ -91,9 +91,9 @@ Token Town es una extensión de VS Code que transforma el trabajo con Claude Cod
 ## Seguridad Anti-Trampa
 
 La economía de coins NO es un sistema financiero real. Las mitigaciones cubren abuso casual:
-1. **Deduplicación por requestId**: Cada respuesta de Anthropic tiene un `requestId` único. El servidor deduplica.
-2. **Rate limiting**: Máximo de coins por hora por usuario.
-3. **Validación de rangos**: Los tokens reportados deben estar dentro de rangos razonables por modelo.
+1. **Deduplicación por requestId**: Cada respuesta de Anthropic tiene un `requestId` único. El servidor deduplica con `EarnCoinsWithDedup()` — dedup check + coin credit + registro en una sola transacción DB (sin race condition).
+2. **Rate limiting**: Token bucket per user en memoria — 30 req/s general, 5 req/s para token reports. Limpieza automática cada 5 minutos.
+3. **Validación de rangos**: Los tokens reportados deben estar dentro de rangos razonables por modelo (max 100K output, 2M input, 2M cache).
 
 ## WebSocket Protocol
 
@@ -118,7 +118,8 @@ Tablas principales:
 - `shop_items` — Catálogo de la tienda (gestionado desde admin panel)
 - `inventory` — Items comprados por usuario
 - `room_layouts` — Layouts de sala guardados server-side
-- `processed_requests` — Deduplicación de token reports
+- `processed_requests` — Deduplicación de token reports (dedup atómico, sin race condition)
+- `agents` — Estado de agentes activos por usuario (palette, hueShift, seat, status) — migración 002
 
 ## Investigaciones Realizadas
 
@@ -136,10 +137,35 @@ Ver `docs/architecture/economy-backend.md` — fórmula de tokens→coins, model
 - **Git**: fork de [nicknisi/pixel-agents](https://github.com/nicknisi/pixel-agents)
 - **Bitbucket**: `https://bitbucket.org/origen-life/token-town.git`
 
+## Módulos de la Extensión (Multiplayer)
+
+Nuevos módulos en `apps/clients/vscode-extension/src/`:
+- `wsClient.ts` — WebSocket client con reconexión exponencial (1s→30s) + jitter, auth via `SecretStorage`
+- `tokenReporter.ts` — Extrae usage de JSONL, batch 10s, offline queue (1000 entries), drain on reconnect
+- `economyClient.ts` — REST client para register, balance, shop, purchase, inventory
+- `agentBroadcaster.ts` — Throttle 500ms para activity updates, inmediato para lifecycle events
+- `serverUtils.ts` — `getServerBaseUrl()` compartido
+
+## Pendiente de Implementar
+
+- [ ] Coin counter en la webview del juego (postMessage `coinsUpdate` ya disponible desde extension)
+- [ ] Modal de tienda en la webview
+- [ ] Visitar la sala de otros usuarios (v2.0)
+- [ ] Sistema de habitaciones múltiples (v2.0)
+- [ ] Sala pública compartida / lobby (v2.0)
+
+## Deuda Técnica Conocida
+
+- 5 error handling gaps menores en Go (shop.go, inventory.go, admin.go — queries sin check de error)
+- JSON injection risk en `admin.go` (`err.Error()` sin escapar en respuesta JSON)
+- Auth WS usa `X-User-ID` header sin validar token — necesita fix antes de producción
+- CORS `AllowedOrigins: ["*"]` y `CheckOrigin: true` — restringir en producción
+- Signing key de tokens tiene fallback hardcodeado — requiere `TOKEN_SIGNING_KEY` env var en producción
+- Credenciales Azure AD (`YOUR_AZURE_CLIENT_ID`) pendientes de configurar en `environment.prod.ts`
+
 ## Decisiones Pendientes
 
 - [ ] Confirmar clientId y tenantId de Azure AD para Microsoft SSO
 - [ ] Definir URL de producción del servidor Go
 - [ ] Decidir si usar Docker Compose para desarrollo local (servidor + PostgreSQL + Redis)
-- [ ] Definir límite de coins por hora (rate limiting anti-trampa)
 - [ ] Precio de compra de nuevas habitaciones

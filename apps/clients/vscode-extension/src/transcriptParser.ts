@@ -16,6 +16,16 @@ import {
 } from './timerManager.js';
 import type { AgentState } from './types.js';
 
+// ── Token usage callback ─────────────────────────────────────
+// Set by extension.ts to pipe usage data into TokenReporter
+type TokenUsageCallback = (agentId: number, record: Record<string, unknown>) => void;
+let tokenUsageCallback: TokenUsageCallback | null = null;
+
+/** Register a callback that is invoked for every parsed JSONL record. */
+export function setTokenUsageCallback(cb: TokenUsageCallback | null): void {
+  tokenUsageCallback = cb;
+}
+
 export const PERMISSION_EXEMPT_TOOLS = new Set([
   'Task',
   'AskUserQuestion',
@@ -92,6 +102,9 @@ export function processTranscriptLine(
   if (!agent) return;
   try {
     const record = JSON.parse(line);
+
+    // Notify multiplayer layer (token usage extraction)
+    tokenUsageCallback?.(agentId, record);
 
     if (record.type === 'assistant' && Array.isArray(record.message?.content)) {
       const blocks = record.message.content as Array<{

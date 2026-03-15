@@ -11,6 +11,8 @@ import (
 
 	"token-town/server/internal/api"
 	"token-town/server/internal/db"
+	"token-town/server/internal/economy"
+	"token-town/server/internal/rooms"
 	"token-town/server/internal/ws"
 )
 
@@ -32,8 +34,18 @@ func main() {
 	}
 	defer database.Close()
 
+	// Room manager
+	roomMgr := rooms.NewManager(database)
+
+	// Economy services
+	wallet := economy.NewWalletService(database)
+	shop := economy.NewShopService(database, wallet)
+
 	// WebSocket Hub
 	hub := ws.NewHub()
+	hub.RoomMgr = roomMgr
+	hub.DB = database
+	hub.Shop = shop
 	go hub.Run()
 
 	// Router

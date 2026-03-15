@@ -1,5 +1,12 @@
 <h1>Dashboard</h1>
-@if (stats()) {
+@if (error()) {
+  <div class="error-banner">
+    <span>{{ error() }}</span>
+    <button (click)="loadStats()">Retry</button>
+  </div>
+} @else if (loading()) {
+  <div class="loading"><div class="spinner"></div> Loading stats...</div>
+} @else if (stats()) {
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-value">{{ stats()!.totalUsers }}</div>
@@ -14,6 +21,24 @@
       <div class="stat-label">Total Coins Earned</div>
     </div>
   </div>
-} @else {
-  <p style="color: var(--color-text-muted); margin-top: 24px">Loading stats...</p>
 }
+
+<div class="live-section">
+  <div class="live-header">
+    <div class="live-dot" [class.connected]="ws.connected()" [class.disconnected]="!ws.connected()"></div>
+    <span class="live-label">
+      @if (ws.connected()) {
+        Live — {{ ws.onlineUsers().size }} user(s) online
+      } @else {
+        Disconnected
+      }
+    </span>
+  </div>
+  @if (ws.onlineUsers().size > 0) {
+    <div class="online-users">
+      @for (entry of ws.onlineUsers().entries(); track entry[0]) {
+        <span class="online-tag">{{ entry[1] }}</span>
+      }
+    </div>
+  }
+</div>

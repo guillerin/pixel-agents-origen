@@ -15,33 +15,57 @@ type EconomyHandler struct {
 	wallet *economy.WalletService
 }
 
+// tokenReportRequest wraps TokenUsage with a requestId for deduplication
+type tokenReportRequest struct {
+	economy.TokenUsage
+	RequestID string `json:"requestId"`
+	SessionID string `json:"sessionId"`
+}
+
 func (h *EconomyHandler) ReportTokens(w http.ResponseWriter, r *http.Request) {
 	claims := auth.GetClaims(r)
 
-	var payload economy.TokenUsage
+	var payload tokenReportRequest
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
 		return
 	}
 
-	if !economy.ValidateTokenReport(payload) {
+	if payload.RequestID == "" {
+		http.Error(w, `{"error":"requestId is required"}`, http.StatusBadRequest)
+		return
+	}
+
+	if !economy.ValidateTokenReport(payload.TokenUsage) {
 		http.Error(w, `{"error":"token report out of bounds"}`, http.StatusBadRequest)
 		return
 	}
 
-	coins := economy.TokensToCoins(payload)
+	coins := economy.TokensToCoins(payload.TokenUsage)
 	if coins <= 0 {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
-	newBalance, err := h.wallet.EarnCoins(r.Context(), claims.UserID, coins, "token_usage", map[string]any{
+	// Atomic: dedup check + coin credit + dedup record in a single transaction
+	newBalance, deduplicated, err := h.wallet.EarnCoinsWithDedup(r.Context(), claims.UserID, payload.RequestID, coins, "token_usage", map[string]any{
 		"model":         payload.Model,
 		"input_tokens":  payload.InputTokens,
 		"output_tokens": payload.OutputTokens,
+		"request_id":    payload.RequestID,
+		"session_id":    payload.SessionID,
 	})
 	if err != nil {
 		http.Error(w, `{"error":"failed to credit coins"}`, http.StatusInternalServerError)
+		return
+	}
+
+	if deduplicated {
+		json.NewEncoder(w).Encode(map[string]any{
+			"coins_earned": 0,
+			"new_balance":  newBalance,
+			"deduplicated": true,
+		})
 		return
 	}
 

@@ -65,11 +65,16 @@
     "format": "prettier --write \"src/**/*.ts\" \"webview-ui/src/**/*.{ts,tsx,css}\" \"*.{js,mjs}\" \"webview-ui/*.{js,ts}\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"webview-ui/src/**/*.{ts,tsx,css}\" \"*.{js,mjs}\" \"webview-ui/*.{js,ts}\""
   },
+  "dependencies": {
+    "@token-town/shared": "workspace:*",
+    "ws": "^8.18.0"
+  },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
     "@types/node": "25.x",
     "@types/pngjs": "^6.0.5",
     "@types/vscode": "^1.105.0",
+    "@types/ws": "^8.18.0",
     "esbuild": "^0.27.2",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",

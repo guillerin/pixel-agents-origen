@@ -3,6 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
+import type { AgentBroadcaster } from './agentBroadcaster.js';
 import {
   getProjectDirPath,
   launchNewTerminal,
@@ -31,7 +32,14 @@ import {
 import { ensureProjectScan } from './fileWatcher.js';
 import type { LayoutWatcher } from './layoutPersistence.js';
 import { readLayoutFromFile, watchLayoutFile, writeLayoutToFile } from './layoutPersistence.js';
+import type { TokenReporter } from './tokenReporter.js';
+import { extractTokenUsage } from './tokenReporter.js';
 import type { AgentState } from './types.js';
+
+export interface MultiplayerServices {
+  tokenReporter: TokenReporter;
+  agentBroadcaster: AgentBroadcaster;
+}
 
 export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
   nextAgentId = { current: 1 };
@@ -57,7 +65,14 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
   // Cross-window layout sync
   layoutWatcher: LayoutWatcher | null = null;
 
-  constructor(private readonly context: vscode.ExtensionContext) {}
+  private readonly multiplayer: MultiplayerServices | null;
+
+  constructor(
+    private readonly context: vscode.ExtensionContext,
+    multiplayer?: MultiplayerServices,
+  ) {
+    this.multiplayer = multiplayer ?? null;
+  }
 
   private get extensionUri(): vscode.Uri {
     return this.context.extensionUri;
@@ -403,6 +418,11 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
       console.log('[Pixel Agents] External layout change — pushing to webview');
       this.webview?.postMessage({ type: 'layoutLoaded', layout });
     });
+  }
+
+  /** Send an arbitrary message to the webview (used by multiplayer services). */
+  postMessageToWebview(message: unknown): void {
+    this.webview?.postMessage(message);
   }
 
   dispose() {

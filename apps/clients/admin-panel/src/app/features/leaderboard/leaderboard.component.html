@@ -1,13 +1,22 @@
 <h1>Leaderboard</h1>
-<table>
-  <thead><tr><th>Rank</th><th>Player</th><th>Total Coins Earned</th></tr></thead>
-  <tbody>
-    @for (entry of entries(); track entry.userId) {
-      <tr>
-        <td class="rank">#{{ entry.rank }}</td>
-        <td>{{ entry.displayName }}</td>
-        <td class="coin">{{ entry.totalCoinsEarned | number }}</td>
-      </tr>
-    }
-  </tbody>
-</table>
+@if (error()) {
+  <div class="error-banner">
+    <span>{{ error() }}</span>
+    <button (click)="loadLeaderboard()">Retry</button>
+  </div>
+} @else if (loading()) {
+  <div class="loading"><div class="spinner"></div> Loading leaderboard...</div>
+} @else {
+  <table>
+    <thead><tr><th>Rank</th><th>Player</th><th>Total Coins Earned</th></tr></thead>
+    <tbody>
+      @for (entry of entries(); track entry.userId) {
+        <tr>
+          <td class="rank">#{{ entry.rank }}</td>
+          <td>{{ entry.displayName }}</td>
+          <td class="coin">{{ entry.totalCoinsEarned | number }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

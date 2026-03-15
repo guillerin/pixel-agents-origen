@@ -40,3 +40,16 @@ export const WORKSPACE_KEY_AGENTS = 'pixel-agents.agents';
 export const WORKSPACE_KEY_AGENT_SEATS = 'pixel-agents.agentSeats';
 export const WORKSPACE_KEY_LAYOUT = 'pixel-agents.layout';
 export const TERMINAL_NAME_PREFIX = 'Claude Code';
+
+// ── WebSocket / Multiplayer ────────────────────────────────
+export const WS_RECONNECT_BASE_DELAY_MS = 1000;
+export const WS_RECONNECT_MAX_DELAY_MS = 30000;
+export const WS_DEFAULT_SERVER_URL = 'ws://localhost:8080/ws';
+export const WS_AUTH_SECRET_KEY = 'pixel-agents.sessionToken';
+export const WS_ACTIVITY_THROTTLE_MS = 500;
+export const WS_TOKEN_BATCH_INTERVAL_MS = 10000;
+export const WS_LAYOUT_DEBOUNCE_MS = 2000;
+
+// ── Token Reporter Persistence ──────────────────────────────
+export const OFFLINE_QUEUE_KEY = 'pixel-agents.tokenReportQueue';
+export const MAX_OFFLINE_QUEUE = 1000;

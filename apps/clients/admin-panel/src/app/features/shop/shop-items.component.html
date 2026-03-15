@@ -1,22 +1,46 @@
 <h1>Shop Items</h1>
-<table>
-  <thead>
-    <tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Rarity</th><th>Status</th><th>Actions</th></tr>
-  </thead>
-  <tbody>
-    @for (item of items(); track item.id) {
-      <tr>
-        <td style="font-family: monospace; font-size: 0.8rem">{{ item.id }}</td>
-        <td>{{ item.name }}</td>
-        <td>{{ item.category }}</td>
-        <td class="coin">
-          <input type="number" [(ngModel)]="editPrices[item.id]" min="0">
-          <button class="btn-save" (click)="savePrice(item.id)">Save</button>
-        </td>
-        <td><span class="badge" [class]="item.rarity">{{ item.rarity }}</span></td>
-        <td>{{ item.isAvailable ? 'Available' : 'Hidden' }}</td>
-        <td><button class="btn-toggle" (click)="toggleAvailability(item)">{{ item.isAvailable ? 'Hide' : 'Show' }}</button></td>
-      </tr>
-    }
-  </tbody>
-</table>
+@if (error()) {
+  <div class="error-banner">
+    <span>{{ error() }}</span>
+    <button (click)="loadItems()">Retry</button>
+  </div>
+} @else if (loading()) {
+  <div class="loading"><div class="spinner"></div> Loading shop items...</div>
+} @else {
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th><th>Rarity</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      @for (item of items(); track item.id) {
+        <tr>
+          <td style="font-family: monospace; font-size: 0.8rem">{{ item.id }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.category }}</td>
+          <td class="coin">
+            <div class="price-cell">
+              <input type="number" [(ngModel)]="editPrices[item.id]" min="0"
+                [class.input-error]="priceErrors[item.id]"
+                (input)="priceErrors[item.id] = ''">
+              <button class="btn-save" (click)="savePrice(item.id)"
+                [disabled]="savingItem() === item.id">
+                @if (savingItem() === item.id) { ... } @else { Save }
+              </button>
+            </div>
+            @if (priceErrors[item.id]) {
+              <div class="inline-error">{{ priceErrors[item.id] }}</div>
+            }
+          </td>
+          <td><span class="badge" [class]="item.rarity">{{ item.rarity }}</span></td>
+          <td>{{ item.isAvailable ? 'Available' : 'Hidden' }}</td>
+          <td>
+            <button class="btn-toggle" (click)="toggleAvailability(item)"
+              [disabled]="togglingItem() === item.id">
+              @if (togglingItem() === item.id) { ... } @else { {{ item.isAvailable ? 'Hide' : 'Show' }} }
+            </button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

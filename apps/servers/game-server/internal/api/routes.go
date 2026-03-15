@@ -22,16 +22,25 @@ func RegisterRoutes(r *chi.Mux, hub *ws.Hub, db *sql.DB) {
 	roomsHandler := &RoomsHandler{db: db}
 	adminHandler := &AdminHandler{db: db, wallet: wallet}
 
-	// Public routes
-	r.Post("/api/auth/register", RegisterHandler(db))
+	// Rate limiters: general (30 req/s, burst 60) and strict for token reports (5 req/s, burst 10)
+	generalLimiter := NewRateLimiter(30, 60)
+	tokenReportLimiter := NewRateLimiter(5, 10)
+
+	// Public routes (with general rate limit)
+	r.Group(func(r chi.Router) {
+		r.Use(generalLimiter.Middleware)
+		r.Post("/api/auth/register", RegisterHandler(db))
+	})
 
 	// Protected routes
 	r.Group(func(r chi.Router) {
 		r.Use(auth.Middleware)
+		r.Use(generalLimiter.Middleware)
 
 		r.Get("/api/auth/me", MeHandler(db))
 
-		r.Post("/api/economy/report-tokens", econHandler.ReportTokens)
+		// Token reports get stricter rate limiting
+		r.With(tokenReportLimiter.Middleware).Post("/api/economy/report-tokens", econHandler.ReportTokens)
 		r.Get("/api/economy/balance", econHandler.GetBalance)
 
 		r.Get("/api/shop/catalog", shopHandler.GetCatalog)

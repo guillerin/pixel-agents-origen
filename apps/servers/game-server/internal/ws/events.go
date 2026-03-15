@@ -30,6 +30,7 @@ const (
 	EventPurchaseResult        ServerEventType = "economy:purchaseResult"
 	EventPresenceJoined        ServerEventType = "presence:joined"
 	EventPresenceLeft          ServerEventType = "presence:left"
+	EventRoomLayoutUpdate      ServerEventType = "room:layoutUpdate"
 	EventError                 ServerEventType = "error"
 )
 
@@ -66,7 +67,7 @@ type TokenReportPayload struct {
 	InputTokens      int    `json:"inputTokens"`
 	OutputTokens     int    `json:"outputTokens"`
 	CacheReadTokens  int    `json:"cacheReadTokens,omitempty"`
-	CacheWriteTokens int    `json:"cacheWriteTokens,omitempty"`
+	CacheCreationTokens int `json:"cacheCreationTokens,omitempty"`
 	Model            string `json:"model"`
 	Timestamp        int64  `json:"timestamp"`
 }
