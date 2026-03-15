@@ -2,20 +2,26 @@
   "name": "token-town",
   "version": "1.1.1",
   "private": true,
-  "packageManager": "pnpm@9.15.0",
-  "engines": {
-    "vscode": "^1.105.0"
-  },
+  "workspaces": [
+    "apps/clients/*",
+    "apps/servers/*",
+    "packages/*"
+  ],
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev --parallel",
-    "lint": "turbo lint",
-    "check-types": "turbo check-types",
-    "clean": "turbo clean",
-    "compile:extension": "turbo compile --filter=@token-town/vscode-extension"
+    "build": "yarn workspaces foreach -A --topological run build",
+    "dev": "yarn workspaces foreach -A --parallel run dev",
+    "lint": "yarn workspaces foreach -A run lint",
+    "check-types": "yarn workspaces foreach -A run check-types",
+    "clean": "yarn workspaces foreach -A run clean",
+    "build:extension": "yarn workspace @token-town/vscode-extension run build",
+    "watch:extension": "yarn workspace @token-town/vscode-extension run watch",
+    "build:admin": "yarn workspace @token-town/admin-panel run build",
+    "dev:admin": "yarn workspace @token-town/admin-panel run dev"
   },
   "devDependencies": {
-    "turbo": "^2.3.0",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "vscode": "^1.105.0"
   }
 }
