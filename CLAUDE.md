@@ -9,11 +9,14 @@ token-town/
   apps/
     clients/
       vscode-extension/    — VS Code extension: pixel art office with animated AI agent characters
-      admin-panel/         — Angular 19+ admin dashboard (Microsoft SSO)
+      angular-app/         — Angular 19+ admin dashboard (Microsoft SSO)
     servers/
-      game-server/         — Go 1.22+ WebSocket + REST server (PostgreSQL, Redis)
+      go-app/         — Go 1.22+ WebSocket + REST server (PostgreSQL, Redis)
   packages/
     shared/                — Shared TypeScript types (economy, agents, events, constants)
+  infrastructure/
+    dockers/
+      development/         — Docker Compose: PostgreSQL + Redis for local dev
   docs/
     architecture/          — Architecture decision records
     project-summary.md     — Full project vision and roadmap
@@ -32,10 +35,14 @@ yarn install                                          # Install all TS dependenc
 cd apps/clients/vscode-extension/webview-ui && npm install  # Webview has its own node_modules
 
 yarn workspace @token-town/vscode-extension run build  # Build extension
-yarn workspace @token-town/admin-panel run build       # Build admin panel
+yarn workspace @token-town/angular-app run build       # Build admin panel
 yarn workspace @token-town/shared run build            # Build shared types
+yarn dev:server                                        # Run Go game server
+yarn test:server                                       # Test Go game server
 
-cd apps/servers/game-server && make dev                # Run Go server (hot reload)
+yarn docker:up                                         # Start PostgreSQL + Redis
+yarn docker:down                                       # Stop services
+yarn docker:reset                                      # Reset volumes and restart
 ```
 
 ### VS Code Tasks
@@ -43,8 +50,19 @@ cd apps/servers/game-server && make dev                # Run Go server (hot relo
 - **Extension: Build** — default build task (Ctrl+Shift+B)
 - **Extension: Watch** — background watch mode for development
 - **Admin Panel: Dev** — ng serve for admin panel
+- **Game Server: Dev** — go run the game server
+- **Docker: Up** — start development services (PostgreSQL + Redis)
+- **Docker: Down** — stop development services
 - **Install All Dependencies** — yarn install for workspace
 - **Install Webview Dependencies** — npm install for webview-ui
+
+### Infrastructure
+
+Development services live in `infrastructure/dockers/development/`:
+- **PostgreSQL 16** on port 5432 (auto-initializes schema on first run)
+- **Redis 7** on port 6379 (pub/sub for WebSocket scaling)
+
+Per-service configuration in `infrastructure/dockers/development/services/<service>/`.
 
 ### Debugging
 
@@ -80,8 +98,8 @@ Press **F5** to launch Extension Development Host. Uses `token-town.code-workspa
 Each application has its own CLAUDE.md with specific architecture details. **When making architectural changes to an application, update its CLAUDE.md accordingly.** The per-app CLAUDE.md files are:
 
 - `apps/clients/vscode-extension/CLAUDE.md` — Extension architecture, sprite system, editor, rendering
-- `apps/clients/admin-panel/CLAUDE.md` — Angular app structure, auth, API integration
-- `apps/servers/game-server/CLAUDE.md` — Go server architecture, WebSocket, economy, database
+- `apps/clients/angular-app/CLAUDE.md` — Angular app structure, auth, API integration
+- `apps/servers/go-app/CLAUDE.md` — Go server architecture, WebSocket, economy, database
 - `packages/shared/CLAUDE.md` — Shared types contract and guidelines
 
 ## Repository

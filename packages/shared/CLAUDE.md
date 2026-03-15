@@ -1,6 +1,6 @@
 # Shared Package — TypeScript Types & Constants
 
-Isomorphic TypeScript package consumed by `vscode-extension` and `admin-panel`. Contains type definitions, event contracts, and shared constants for the Token Town ecosystem.
+Isomorphic TypeScript package consumed by `vscode-extension` and `angular-app`. Contains type definitions, event contracts, and shared constants for the Token Town ecosystem.
 
 ## Structure
 
@@ -19,7 +19,7 @@ src/
 
 ## Type-Safety Contract
 
-These types define the contract between TypeScript clients and the Go server. JSON field names must match exactly between this package and Go struct tags in `game-server/internal/ws/events.go`.
+These types define the contract between TypeScript clients and the Go server. JSON field names must match exactly between this package and Go struct tags in `go-app/internal/ws/events.go`.
 
 When adding or modifying types here, verify the corresponding Go structs are updated in the game server.
 
