@@ -46,6 +46,16 @@
           "name": "Pixel Agents"
         }
       ]
+    },
+    "configuration": {
+      "title": "Pixel Agents",
+      "properties": {
+        "pixelAgents.serverUrl": {
+          "type": "string",
+          "default": "ws://localhost:30000/ws",
+          "description": "Token Town WebSocket server URL (e.g. ws://localhost:30000/ws or wss://your-server.com/ws)"
+        }
+      }
     }
   },
   "scripts": {
@@ -66,7 +76,7 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"webview-ui/src/**/*.{ts,tsx,css}\" \"*.{js,mjs}\" \"webview-ui/*.{js,ts}\""
   },
   "dependencies": {
-    "@token-town/shared": "workspace:*",
+    "@token-town/shared": "*",
     "ws": "^8.18.0"
   },
   "devDependencies": {

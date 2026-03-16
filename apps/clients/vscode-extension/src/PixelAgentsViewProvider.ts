@@ -1,3 +1,4 @@
+import { exec } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -5,6 +6,7 @@ import * as vscode from 'vscode';
 
 import type { AgentBroadcaster } from './agentBroadcaster.js';
 import {
+  autoDiscoverAgents,
   getProjectDirPath,
   launchNewTerminal,
   persistAgents,
@@ -112,12 +114,12 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
       } else if (message.type === 'focusAgent') {
         const agent = this.agents.get(message.id);
         if (agent) {
-          agent.terminalRef.show();
+          agent.terminalRef?.show();
         }
       } else if (message.type === 'closeAgent') {
         const agent = this.agents.get(message.id);
         if (agent) {
-          agent.terminalRef.dispose();
+          agent.terminalRef?.dispose();
         }
       } else if (message.type === 'saveAgentSeats') {
         // Store seat assignments in a separate key (never touched by persistAgents)
@@ -164,6 +166,21 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
         console.log('[Extension] workspaceRoot:', workspaceRoot);
         console.log('[Extension] projectDir:', projectDir);
         if (projectDir) {
+          // Auto-discover existing sessions (started outside the + Agent button)
+          autoDiscoverAgents(
+            projectDir,
+            this.knownJsonlFiles,
+            this.nextAgentId,
+            this.agents,
+            this.fileWatchers,
+            this.pollingTimers,
+            this.waitingTimers,
+            this.permissionTimers,
+            this.webview,
+            this.persistAgents,
+          );
+          sendExistingAgents(this.agents, this.context, this.webview);
+
           ensureProjectScan(
             projectDir,
             this.knownJsonlFiles,
@@ -281,10 +298,19 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
         }
         sendExistingAgents(this.agents, this.context, this.webview);
       } else if (message.type === 'openSessionsFolder') {
+        const openFolder = (folderPath: string) => {
+          if (process.platform === 'win32') {
+            exec(`explorer "${folderPath}"`);
+          } else if (process.platform === 'darwin') {
+            exec(`open "${folderPath}"`);
+          } else {
+            exec(`xdg-open "${folderPath}"`);
+          }
+        };
         // Try the current workspace folder first
         const workspaceProjectDir = getProjectDirPath();
         if (workspaceProjectDir && fs.existsSync(workspaceProjectDir)) {
-          vscode.env.openExternal(vscode.Uri.file(workspaceProjectDir));
+          openFolder(workspaceProjectDir);
         } else {
           // Workspace dir not found — let the user pick any folder
           const picked = await vscode.window.showOpenDialog({
@@ -298,7 +324,7 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
             const selectedPath = picked[0].fsPath;
             const projectDir = getProjectDirPath(selectedPath);
             if (projectDir && fs.existsSync(projectDir)) {
-              vscode.env.openExternal(vscode.Uri.file(projectDir));
+              openFolder(projectDir);
             } else {
               vscode.window.showWarningMessage(
                 `Pixel Agents: No Claude session found for "${selectedPath}". Expected: ${projectDir ?? 'unknown'}`,

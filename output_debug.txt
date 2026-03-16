@@ -1,0 +1,191 @@
+localProcessExtensionHost.ts:350 [Extension Host] STOPPED on first line for debugging on port 53357
+F @ localProcessExtensionHost.ts:350
+log.ts:440  INFO Started local extension host with pid 54088.
+log.ts:440  INFO Loading development extension at c:\Users\GuillermoSolansMillá\Source\pruebas\pixel-agents\apps\clients\vscode-extension
+localProcessExtensionHost.ts:280 Extension Host
+localProcessExtensionHost.ts:281 Debugger attached.
+log.ts:440  INFO MCP Registry configured: https://api.mcp.github.com
+log.ts:440  INFO Settings Sync: Account status changed from uninitialized to unavailable
+TMScopeRegistry.ts:46 Overwriting grammar scope name to file mapping for scope source.python.
+Old grammar file: file:///c%3A/Program%20Files/Microsoft%20VS%20Code/resources/app/extensions/python/syntaxes/MagicPython.tmLanguage.json.
+New grammar file: file:///c%3A/Users/GuillermoSolansMill%C3%A1/.vscode/extensions/ms-python.vscode-pylance-2026.1.1/grammars/PylancePython.tmLanguage
+register @ TMScopeRegistry.ts:46
+TMScopeRegistry.ts:46 Overwriting grammar scope name to file mapping for scope source.python.
+Old grammar file: file:///c%3A/Program%20Files/Microsoft%20VS%20Code/resources/app/extensions/python/syntaxes/MagicPython.tmLanguage.json.
+New grammar file: file:///c%3A/Users/GuillermoSolansMill%C3%A1/.vscode/extensions/ms-python.vscode-pylance-2026.1.1/grammars/PylancePython.tmLanguage
+register @ TMScopeRegistry.ts:46
+log.ts:440  INFO [perf] Render performance baseline is 24ms
+console.ts:139 [Extension Host] Created lock file at C:\Users\GuillermoSolansMillá\.claude\ide\44208.lock (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] Set CLAUDE_CODE_SSE_PORT=44208 in terminal environment (in-memory) (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [/c:/Users/GuillermoSolansMillá/.vscode/extensions/ms-python.vscode-python-envs-1.22.0-win32-x64]: Extension is not compatible with Code 1.107.1. Extension requires: ^1.110.0-20260204.
+error @ log.ts:460
+webviewElement.ts:409 Unrecognized feature: 'local-network-access'.
+gb @ webviewElement.ts:409
+webviewElement.ts:489 An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.
+mountTo @ webviewElement.ts:489
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 1079ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Pixel Agents] Project dir: c:\Users\GuillermoSolansMillá\Source\pruebas\pixel-agents → c--Users-GuillermoSolansMill--Source-pruebas-pixel-agents (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] workspaceRoot: c:\Users\GuillermoSolansMillá\Source\pruebas\pixel-agents (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] projectDir: C:\Users\GuillermoSolansMillá\.claude\projects\c--Users-GuillermoSolansMill--Source-pruebas-pixel-agents (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Pixel Agents] sendExistingAgents: agents=[], meta={} (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] Loading furniture assets... (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] extensionPath: c:\Users\GuillermoSolansMillá\Source\pruebas\pixel-agents\apps\clients\vscode-extension (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] Found bundled assets at dist/ (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] Using assetsRoot: c:\Users\GuillermoSolansMillá\Source\pruebas\pixel-agents\apps\clients\vscode-extension\dist (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] Loaded default layout (21×22, revision 1) from default-layout-1.json (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] ✅ Loaded 6 character sprites (7 frames × 3 directions each) (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Pixel Agents] sendExistingAgents: agents=[], meta={} (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] Character sprites loaded, sending to webview (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] 📤 Sent 6 character sprites to webview (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] Loading floor tiles from: c:\Users\GuillermoSolansMillá\Source\pruebas\pixel-agents\apps\clients\vscode-extension\dist\assets\floors (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] ✅ Loaded 9 floor tile patterns from floors/ (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] Floor tiles loaded, sending to webview (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] 📤 Sent 9 floor tile patterns to webview (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] Loading wall tiles from: c:\Users\GuillermoSolansMillá\Source\pruebas\pixel-agents\apps\clients\vscode-extension\dist\assets\walls (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] ✅ Loaded 1 wall tile set(s) (16 pieces total) (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] Wall tiles loaded, sending to webview (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] 📤 Sent 1 wall tile set(s) to webview (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] workspaceRoot received: "c:\Users\GuillermoSolansMillá\Source\pruebas\pixel-agents\apps\clients\vscode-extension\dist" (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] Scanning furniture directory: c:\Users\GuillermoSolansMillá\Source\pruebas\pixel-agents\apps\clients\vscode-extension\dist\assets\furniture (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] 📦 Found 32 furniture folders (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host]   ⚠️  No manifest.json in chairs (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host]   ⚠️  No manifest.json in decor (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host]   ⚠️  No manifest.json in desks (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host]   ⚠️  No manifest.json in electronics (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host]   ⚠️  No manifest.json in misc (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host]   ⚠️  No manifest.json in storage (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host]   ⚠️  No manifest.json in wall (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host]   ✓ Loaded 38 / 38 assets (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] ✅ Successfully loaded 38 furniture sprites (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] ✅ Assets loaded, sending to webview (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] Converting sprites Map to object... (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [AssetLoader] Posting furnitureAssetsLoaded message with 38 assets (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] 📤 Sent 38 furniture assets to webview (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Extension] Sending saved layout (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Pixel Agents] Layout loaded from file (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 1935ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Pixel Agents] Project dir: c:\Users\GuillermoSolansMillá\Source\pruebas\pixel-agents → c--Users-GuillermoSolansMill--Source-pruebas-pixel-agents (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 5521ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [Pixel Agents] Project dir: c:\Users\GuillermoSolansMillá\Source\repos → c--Users-GuillermoSolansMill--Source-repos (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 5972ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 21423ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 33860ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 30151ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 35328ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 36319ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 20918ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+log.ts:460   ERR [Extension Host] [WsClient] error: 
+error @ log.ts:460
+error @ log.ts:565
+error @ logService.ts:51
+Aks @ remoteConsoleUtil.ts:58
+$logExtensionHostMessage @ mainThreadConsole.ts:38
+S @ rpcProtocol.ts:458
+Q @ rpcProtocol.ts:443
+M @ rpcProtocol.ts:373
+L @ rpcProtocol.ts:299
+(anonymous) @ rpcProtocol.ts:161
+C @ event.ts:1202
+fire @ event.ts:1233
+fire @ ipc.net.ts:652
+l.onmessage @ localProcessExtensionHost.ts:383
+console.ts:139 [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ console.ts:139
+$logExtensionHostMessage @ mainThreadConsole.ts:39
+S @ rpcProtocol.ts:458
+Q @ rpcProtocol.ts:443
+M @ rpcProtocol.ts:373
+L @ rpcProtocol.ts:299
+(anonymous) @ rpcProtocol.ts:161
+C @ event.ts:1202
+fire @ event.ts:1233
+fire @ ipc.net.ts:652
+l.onmessage @ localProcessExtensionHost.ts:383
+console.ts:139 [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+console.ts:139 [Extension Host] [WsClient] reconnecting in 27461ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+   ERR [Extension Host] [WsClient] error: 
+error @ workbench.desktop.main.js:38
+error @ workbench.desktop.main.js:38
+error @ workbench.desktop.main.js:3853
+Aks @ workbench.desktop.main.js:534
+$logExtensionHostMessage @ workbench.desktop.main.js:534
+S @ workbench.desktop.main.js:3894
+Q @ workbench.desktop.main.js:3894
+M @ workbench.desktop.main.js:3894
+L @ workbench.desktop.main.js:3894
+(anonymous) @ workbench.desktop.main.js:3894
+C @ workbench.desktop.main.js:29
+fire @ workbench.desktop.main.js:29
+fire @ workbench.desktop.main.js:567
+l.onmessage @ workbench.desktop.main.js:3905
+ [Extension Host] [WsClient] error:  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+Lks @ workbench.desktop.main.js:534
+$logExtensionHostMessage @ workbench.desktop.main.js:534
+S @ workbench.desktop.main.js:3894
+Q @ workbench.desktop.main.js:3894
+M @ workbench.desktop.main.js:3894
+L @ workbench.desktop.main.js:3894
+(anonymous) @ workbench.desktop.main.js:3894
+C @ workbench.desktop.main.js:29
+fire @ workbench.desktop.main.js:29
+fire @ workbench.desktop.main.js:567
+l.onmessage @ workbench.desktop.main.js:3905
+ [Extension Host] [WsClient] closed: 1006  (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))
+ [Extension Host] [WsClient] reconnecting in 19322ms (at console.<anonymous> (file:///c:/Program%20Files/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:214:29517))

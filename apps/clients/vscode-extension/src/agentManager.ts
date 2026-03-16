@@ -181,6 +181,7 @@ export function persistAgents(
 ): void {
   const persisted: PersistedAgent[] = [];
   for (const agent of agents.values()) {
+    if (!agent.terminalRef) continue; // headless agents (auto-discovered) are not persisted
     persisted.push({
       id: agent.id,
       terminalName: agent.terminalRef.name,
@@ -390,6 +391,97 @@ export function sendCurrentAgentStatuses(
         status: 'waiting',
       });
     }
+  }
+}
+
+/**
+ * Scans ALL project dirs under ~/.claude/projects/ for JSONL files modified
+ * in the last 24h and creates headless agents for any not already tracked.
+ * This lets the extension show agents from any project, not just the current workspace.
+ */
+export function autoDiscoverAgents(
+  _projectDir: string,
+  knownJsonlFiles: Set<string>,
+  nextAgentIdRef: { current: number },
+  agents: Map<number, AgentState>,
+  fileWatchers: Map<number, fs.FSWatcher>,
+  pollingTimers: Map<number, ReturnType<typeof setInterval>>,
+  waitingTimers: Map<number, ReturnType<typeof setTimeout>>,
+  permissionTimers: Map<number, ReturnType<typeof setTimeout>>,
+  webview: vscode.Webview | undefined,
+  doPersist: () => void,
+): void {
+  const claudeProjectsRoot = path.join(os.homedir(), '.claude', 'projects');
+
+  let projectDirs: string[];
+  try {
+    projectDirs = fs
+      .readdirSync(claudeProjectsRoot)
+      .map((d) => path.join(claudeProjectsRoot, d))
+      .filter((d) => fs.statSync(d).isDirectory());
+  } catch {
+    return;
+  }
+
+  const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  let discovered = 0;
+
+  for (const projectDir of projectDirs) {
+    let files: string[];
+    try {
+      files = fs
+        .readdirSync(projectDir)
+        .filter((f) => f.endsWith('.jsonl'))
+        .map((f) => path.join(projectDir, f));
+    } catch {
+      continue;
+    }
+
+    for (const file of files) {
+      if (knownJsonlFiles.has(file)) continue;
+
+      let stat: fs.Stats;
+      try {
+        stat = fs.statSync(file);
+      } catch {
+        continue;
+      }
+
+      if (now - stat.mtimeMs > TWENTY_FOUR_HOURS_MS) continue;
+
+      knownJsonlFiles.add(file);
+
+      const id = nextAgentIdRef.current++;
+      const agent: AgentState = {
+        id,
+        terminalRef: undefined,
+        projectDir,
+        jsonlFile: file,
+        fileOffset: stat.size, // start from EOF — only track new activity
+        lineBuffer: '',
+        activeToolIds: new Set(),
+        activeToolStatuses: new Map(),
+        activeToolNames: new Map(),
+        activeSubagentToolIds: new Map(),
+        activeSubagentToolNames: new Map(),
+        isWaiting: false,
+        permissionSent: false,
+        hadToolsInTurn: false,
+      };
+
+      agents.set(id, agent);
+      console.log(`[Pixel Agents] Auto-discovered agent ${id} from ${path.basename(file)} (${path.basename(projectDir)})`);
+      webview?.postMessage({ type: 'agentCreated', id });
+
+      startFileWatching(id, file, agents, fileWatchers, pollingTimers, waitingTimers, permissionTimers, webview);
+      discovered++;
+    }
+  }
+
+  if (discovered > 0) {
+    console.log(`[Pixel Agents] Auto-discovered ${discovered} agent(s) across all projects`);
+    doPersist();
   }
 }
 
