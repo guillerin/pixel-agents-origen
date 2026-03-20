@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"token-town/server/internal/economy"
+	"token-town/server/internal/shop"
 )
 
 const (
@@ -109,6 +110,16 @@ func (c *Client) handleEvent(event InboundEvent) {
 		c.handleRoomSave(event.Payload)
 	case EventShopPurchase:
 		c.handleShopPurchase(event.Payload)
+	case EventShopGetCatalog:
+		c.handleShopGetCatalog(event.Payload)
+	case EventShopGetInventory:
+		c.handleShopGetInventory(event.Payload)
+	case EventShopGetPlacements:
+		c.handleShopGetPlacements(event.Payload)
+	case EventShopUpdatePlacements:
+		c.handleShopUpdatePlacements(event.Payload)
+	case EventShopRemovePlacement:
+		c.handleShopRemovePlacement(event.Payload)
 	case EventTokenReport:
 		c.handleTokenReport(event.Payload)
 	default:
@@ -190,8 +201,16 @@ func (c *Client) handleRoomSave(payload map[string]interface{}) {
 	}, c)
 }
 
-// handleShopPurchase processes a shop purchase and sends the result
+// handleShopPurchase routes to the furniture shop purchase if productId is present,
+// otherwise falls back to the legacy shop:purchase handler (itemId).
 func (c *Client) handleShopPurchase(payload map[string]interface{}) {
+	// New furniture shop purchase: uses "productId"
+	if productID, ok := payload["productId"].(string); ok && productID != "" {
+		c.handleFurniturePurchase(productID, payload)
+		return
+	}
+
+	// Legacy shop purchase: uses "itemId"
 	if c.hub.Shop == nil {
 		c.hub.SendToClient(c, EventError, ErrorPayload{Code: "no_shop", Message: "shop not available"})
 		return
@@ -214,14 +233,314 @@ func (c *Client) handleShopPurchase(payload map[string]interface{}) {
 	c.hub.SendToClient(c, EventPurchaseResult, result)
 
 	if result.Success {
-		// Broadcast coin update to the room
 		c.hub.BroadcastToRoom(c.RoomID, EventCoinsUpdate, CoinsUpdatePayload{
 			UserID:     c.UserID,
 			TotalCoins: result.RemainingCoins,
-			Delta:      0, // purchase delta is negative; broadcast just the new total
+			Delta:      0,
 			Reason:     "purchase:" + itemID,
 		}, nil)
 	}
+}
+
+// handleFurniturePurchase processes a furniture shop purchase and broadcasts results
+func (c *Client) handleFurniturePurchase(productID string, payload map[string]interface{}) {
+	if c.hub.FurniturePurchase == nil {
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "not_ready", Message: "shop not available"})
+		return
+	}
+
+	qty := 1
+	if v, ok := payload["quantity"].(float64); ok && v > 0 {
+		qty = int(v)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result := c.hub.FurniturePurchase.Purchase(ctx, c.UserID, productID, qty)
+
+	items := make([]ShopPurchasedItem, 0, len(result.Items))
+	for _, item := range result.Items {
+		items = append(items, ShopPurchasedItem{
+			ProductID:  item.ProductID,
+			Quantity:   item.Quantity,
+			CoinsSpent: item.CoinsSpent,
+		})
+	}
+
+	c.hub.SendToClient(c, EventShopPurchaseResult, ShopPurchaseResultPayload{
+		Success:          result.Success,
+		OrderID:          result.OrderID,
+		Items:            items,
+		TotalCoinsSpent:  result.TotalCoinsSpent,
+		RemainingBalance: result.RemainingBalance,
+		Error:            result.Error,
+		ErrorCode:        result.ErrorCode,
+	})
+
+	if result.Success {
+		// Send updated inventory to purchaser
+		if c.hub.FurnitureInventory != nil {
+			invResult, err := c.hub.FurnitureInventory.GetUserInventory(ctx, c.UserID, "", "")
+			if err == nil {
+				invItems := make([]ShopInventoryItem, 0, len(invResult.Items))
+				for _, inv := range invResult.Items {
+					invItems = append(invItems, ShopInventoryItem{
+						ID:               inv.ID,
+						Product:          productToShopItem(inv.Product),
+						Quantity:         inv.Quantity,
+						FirstPurchasedAt: inv.FirstPurchasedAt.Format(time.RFC3339),
+						LastPurchasedAt:  inv.LastPurchasedAt.Format(time.RFC3339),
+					})
+				}
+				c.hub.SendToClient(c, EventShopInventory, ShopInventoryPayload{
+					Items:      invItems,
+					Total:      invResult.Total,
+					TotalValue: invResult.TotalValue,
+				})
+			}
+		}
+
+		// Broadcast balance update to room
+		c.hub.BroadcastToRoom(c.RoomID, EventShopBalanceUpdate, ShopBalanceUpdatePayload{
+			UserID:  c.UserID,
+			Balance: result.RemainingBalance,
+			Delta:   -result.TotalCoinsSpent,
+			Reason:  "purchase:" + productID,
+		}, nil)
+	}
+}
+
+// ─── Furniture Shop WS Handlers ───────────────────────────────────────────────
+
+// handleShopGetCatalog returns the product catalog filtered by payload
+func (c *Client) handleShopGetCatalog(payload map[string]interface{}) {
+	if c.hub.FurnitureCatalog == nil {
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "not_ready", Message: "shop not available"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	f := shop.ProductFilters{Limit: 100}
+	if v, ok := payload["categoryId"].(string); ok {
+		f.CategoryID = v
+	}
+	if v, ok := payload["rarity"].(string); ok {
+		f.Rarity = v
+	}
+	if v, ok := payload["search"].(string); ok {
+		f.Search = v
+	}
+
+	result, err := c.hub.FurnitureCatalog.GetProducts(ctx, f)
+	if err != nil {
+		log.Printf("[client] shop catalog error user=%s: %v", c.UserID, err)
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "catalog_error", Message: "failed to fetch catalog"})
+		return
+	}
+
+	items := make([]ShopProductItem, 0, len(result.Products))
+	for _, p := range result.Products {
+		items = append(items, productToShopItem(p))
+	}
+
+	c.hub.SendToClient(c, EventShopCatalog, ShopCatalogPayload{
+		Products: items,
+		Total:    result.Total,
+	})
+}
+
+// handleShopGetInventory returns the user's furniture inventory
+func (c *Client) handleShopGetInventory(_ map[string]interface{}) {
+	if c.hub.FurnitureInventory == nil {
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "not_ready", Message: "shop not available"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result, err := c.hub.FurnitureInventory.GetUserInventory(ctx, c.UserID, "", "")
+	if err != nil {
+		log.Printf("[client] shop inventory error user=%s: %v", c.UserID, err)
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "inventory_error", Message: "failed to fetch inventory"})
+		return
+	}
+
+	items := make([]ShopInventoryItem, 0, len(result.Items))
+	for _, inv := range result.Items {
+		items = append(items, ShopInventoryItem{
+			ID:               inv.ID,
+			Product:          productToShopItem(inv.Product),
+			Quantity:         inv.Quantity,
+			FirstPurchasedAt: inv.FirstPurchasedAt.Format(time.RFC3339),
+			LastPurchasedAt:  inv.LastPurchasedAt.Format(time.RFC3339),
+		})
+	}
+
+	c.hub.SendToClient(c, EventShopInventory, ShopInventoryPayload{
+		Items:      items,
+		Total:      result.Total,
+		TotalValue: result.TotalValue,
+	})
+}
+
+// handleShopGetPlacements returns the user's furniture placements for a room
+func (c *Client) handleShopGetPlacements(payload map[string]interface{}) {
+	if c.hub.FurniturePlacement == nil {
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "not_ready", Message: "shop not available"})
+		return
+	}
+
+	roomID := "main"
+	if v, ok := payload["roomId"].(string); ok && v != "" {
+		roomID = v
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	placements, err := c.hub.FurniturePlacement.GetPlacements(ctx, c.UserID, roomID)
+	if err != nil {
+		log.Printf("[client] shop placements error user=%s: %v", c.UserID, err)
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "placements_error", Message: "failed to fetch placements"})
+		return
+	}
+
+	items := placementsToShopItems(placements)
+	c.hub.SendToClient(c, EventShopPlacements, ShopPlacementsPayload{
+		RoomID:     roomID,
+		Placements: items,
+	})
+}
+
+// handleShopUpdatePlacements saves a batch of furniture placements
+func (c *Client) handleShopUpdatePlacements(payload map[string]interface{}) {
+	if c.hub.FurniturePlacement == nil {
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "not_ready", Message: "shop not available"})
+		return
+	}
+
+	roomID := "main"
+	if v, ok := payload["roomId"].(string); ok && v != "" {
+		roomID = v
+	}
+
+	rawPlacements, _ := payload["placements"].([]interface{})
+	updates := make([]shop.PlacementUpdate, 0, len(rawPlacements))
+	for _, raw := range rawPlacements {
+		m, ok := raw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		var u shop.PlacementUpdate
+		if v, ok := m["inventoryItemId"].(float64); ok {
+			u.InventoryItemID = int64(v)
+		}
+		if v, ok := m["x"].(float64); ok {
+			u.X = int(v)
+		}
+		if v, ok := m["y"].(float64); ok {
+			u.Y = int(v)
+		}
+		if v, ok := m["rotation"].(float64); ok {
+			u.Rotation = int(v)
+		}
+		if v, ok := m["layer"].(float64); ok {
+			u.Layer = int(v)
+		}
+		updates = append(updates, u)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result := c.hub.FurniturePlacement.UpdatePlacements(ctx, c.UserID, roomID, updates)
+
+	items := placementsToShopItems(result.Placements)
+	errs := make([]ShopPlacementError, 0, len(result.Errors))
+	for _, e := range result.Errors {
+		errs = append(errs, ShopPlacementError{Index: e.Index, Error: e.Error})
+	}
+
+	c.hub.SendToClient(c, EventShopPlacementsUpdated, ShopPlacementsUpdatedPayload{
+		Success:    result.Success,
+		Placements: items,
+		Errors:     errs,
+	})
+
+	if result.Success {
+		// Broadcast layout update to room
+		c.hub.BroadcastToRoom(c.RoomID, EventRoomLayoutUpdate, map[string]interface{}{
+			"userId":     c.UserID,
+			"roomId":     roomID,
+			"placements": items,
+		}, c)
+	}
+}
+
+// handleShopRemovePlacement removes a single placement
+func (c *Client) handleShopRemovePlacement(payload map[string]interface{}) {
+	if c.hub.FurniturePlacement == nil {
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "not_ready", Message: "shop not available"})
+		return
+	}
+
+	placementID, ok := payload["placementId"].(float64)
+	if !ok || placementID <= 0 {
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "invalid_payload", Message: "placementId required"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := c.hub.FurniturePlacement.RemovePlacement(ctx, c.UserID, int64(placementID)); err != nil {
+		log.Printf("[client] remove placement error user=%s placement=%d: %v", c.UserID, int64(placementID), err)
+		c.hub.SendToClient(c, EventShopError, ErrorPayload{Code: "remove_failed", Message: "failed to remove placement"})
+		return
+	}
+
+	c.hub.SendToClient(c, EventShopPlacements, map[string]interface{}{
+		"success":     true,
+		"placementId": int64(placementID),
+	})
+}
+
+// ─── WS helpers ───────────────────────────────────────────────────────────────
+
+func productToShopItem(p shop.FurnitureProduct) ShopProductItem {
+	return ShopProductItem{
+		ID:           p.ID,
+		CategoryID:   p.CategoryID,
+		Name:         p.Name,
+		Description:  p.Description,
+		PriceCoins:   p.PriceCoins,
+		Rarity:       p.Rarity,
+		SpriteURL:    p.SpriteURL,
+		ThumbnailURL: p.ThumbnailURL,
+		Width:        p.Width,
+		Height:       p.Height,
+		CanStack:     p.CanStack,
+	}
+}
+
+func placementsToShopItems(placements []shop.FurniturePlacement) []ShopPlacementItem {
+	items := make([]ShopPlacementItem, 0, len(placements))
+	for _, fp := range placements {
+		items = append(items, ShopPlacementItem{
+			ID:              fp.ID,
+			InventoryItemID: fp.InventoryItemID,
+			Product:         productToShopItem(fp.Product),
+			X:               fp.X,
+			Y:               fp.Y,
+			Rotation:        fp.Rotation,
+			Layer:           fp.Layer,
+		})
+	}
+	return items
 }
 
 // handleTokenReport processes a token usage report via WS

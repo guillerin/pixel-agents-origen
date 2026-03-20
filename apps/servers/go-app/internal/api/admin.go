@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -77,7 +78,8 @@ func (h *AdminHandler) AdjustCoins(w http.ResponseWriter, r *http.Request) {
 		newBalance, err = h.wallet.SpendCoins(r.Context(), targetUserID, -body.Amount, "admin_adjustment:"+body.Reason, nil)
 	}
 	if err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		log.Printf("[admin] adjust coins error user=%s: %v", targetUserID, err)
+		http.Error(w, `{"error":"failed to adjust coins"}`, http.StatusBadRequest)
 		return
 	}
 	json.NewEncoder(w).Encode(map[string]any{"new_balance": newBalance})

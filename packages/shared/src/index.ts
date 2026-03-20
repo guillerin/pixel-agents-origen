@@ -1,4 +1,4 @@
-// ─── Economy ─────────────────────────────────────────────────────────────────
+// ─── Economy ─────────────────────────────────────────────────────────────────────────────────────────
 
 export interface TokenUsage {
   inputTokens: number;
@@ -44,7 +44,7 @@ export interface ShopItem {
   isAvailable: boolean;
 }
 
-// ─── Users ───────────────────────────────────────────────────────────────────
+// ─── Users ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 export interface User {
   id: string;
@@ -60,7 +60,7 @@ export interface User {
   createdAt: string;
 }
 
-// ─── Agents & Rooms ──────────────────────────────────────────────────────────
+// ─── Agents & Rooms ──────────────────────────────────────────────────────────────────────────────────
 
 export const AgentStatus = {
   IDLE: 'idle',
@@ -92,7 +92,7 @@ export interface PlayerPresence {
   agents: RemoteAgent[];
 }
 
-// ─── WebSocket Events ────────────────────────────────────────────────────────
+// ─── WebSocket Events ────────────────────────────────────────────────────────────────────────────
 
 export const ClientEventType = {
   AUTH: 'auth',
@@ -123,7 +123,211 @@ export const ServerEventType = {
 } as const;
 export type ServerEventType = (typeof ServerEventType)[keyof typeof ServerEventType];
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Shop ─────────────────────────────────────────────────────────────────────────────────────────
+
+export const FurnitureRarity = {
+  COMMON: 'common',
+  UNCOMMON: 'uncommon',
+  RARE: 'rare',
+  LEGENDARY: 'legendary',
+} as const;
+export type FurnitureRarity = (typeof FurnitureRarity)[keyof typeof FurnitureRarity];
+
+export const ShopEventType = {
+  CATALOG_UPDATED: 'catalog:updated',
+  INVENTORY_UPDATED: 'inventory:updated',
+  PLACEMENT_UPDATED: 'placement:updated',
+} as const;
+export type ShopEventType = (typeof ShopEventType)[keyof typeof ShopEventType];
+
+export interface FurnitureCategory {
+  id: string;
+  name: string;
+  displayName: string;
+  description?: string;
+  iconUrl?: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FurnitureProduct {
+  id: string;
+  categoryId: string;
+  name: string;
+  description?: string;
+  priceCoins: number;
+  rarity: FurnitureRarity;
+  spriteUrl: string;
+  thumbnailUrl?: string;
+  previewUrl?: string;
+  width: number;
+  height: number;
+  canStack: boolean;
+  isAvailable: boolean;
+  availableFrom?: string;
+  availableUntil?: string;
+  maxPerUser?: number;
+  stockQuantity?: number;
+  tags: string[];
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FurnitureInventoryItem {
+  id: string;
+  userId: string;
+  product: FurnitureProduct;
+  quantity: number;
+  firstPurchasedAt: string;
+  lastPurchasedAt: string;
+}
+
+export interface FurniturePlacement {
+  id: string;
+  userId: string;
+  inventoryItemId: string;
+  product: FurnitureProduct;
+  x: number;
+  y: number;
+  rotation: 0 | 90 | 180 | 270;
+  layer: number;
+  roomId: string;
+  placedAt: string;
+  updatedAt: string;
+}
+
+export interface ShopPurchaseRequest {
+  productId: string;
+  quantity?: number;
+}
+
+export interface ShopPurchaseResponse {
+  success: boolean;
+  orderId?: string;
+  items: Array<{
+    productId: string;
+    quantity: number;
+    coinsSpent: number;
+  }>;
+  totalCoinsSpent: number;
+  remainingBalance: number;
+  inventory: FurnitureInventoryItem[];
+  error?: string;
+}
+
+export interface ShopCatalogQuery {
+  categoryId?: string;
+  rarity?: FurnitureRarity;
+  minPrice?: number;
+  maxPrice?: number;
+  search?: string;
+  sort?: 'price_asc' | 'price_desc' | 'name' | 'rarity' | 'newest';
+  limit?: number;
+  offset?: number;
+}
+
+export interface ShopCatalogResponse {
+  products: FurnitureProduct[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export const ShopClientEvent = {
+  GET_CATALOG: 'shop:getCatalog',
+  GET_INVENTORY: 'shop:getInventory',
+  PURCHASE: 'shop:purchase',
+  GET_PLACEMENTS: 'shop:getPlacements',
+  UPDATE_PLACEMENTS: 'shop:updatePlacements',
+  REMOVE_PLACEMENT: 'shop:removePlacement',
+} as const;
+export type ShopClientEvent = (typeof ShopClientEvent)[keyof typeof ShopClientEvent];
+
+export const ShopServerEvent = {
+  CATALOG: 'shop:catalog',
+  INVENTORY: 'shop:inventory',
+  PURCHASE_RESULT: 'shop:purchaseResult',
+  PLACEMENTS: 'shop:placements',
+  PLACEMENTS_UPDATED: 'shop:placementsUpdated',
+  BALANCE_UPDATE: 'shop:balanceUpdate',
+  ERROR: 'shop:error',
+} as const;
+export type ShopServerEvent = (typeof ShopServerEvent)[keyof typeof ShopServerEvent];
+
+export interface ProductAnalytics {
+  productId: string;
+  totalPurchases: number;
+  totalRevenue: number;
+  uniqueBuyers: number;
+  averagePerBuyer: number;
+  purchasesByRarity: Record<string, number>;
+  purchasesOverTime: Array<{
+    date: string;
+    count: number;
+    revenue: number;
+  }>;
+}
+
+export interface ShopAnalytics {
+  totalRevenue: number;
+  totalPurchases: number;
+  uniqueCustomers: number;
+  averageOrderValue: number;
+  topProducts: Array<{
+    productId: string;
+    name: string;
+    purchases: number;
+    revenue: number;
+  }>;
+  revenueByCategory: Array<{
+    categoryId: string;
+    categoryName: string;
+    revenue: number;
+    percentage: number;
+  }>;
+  revenueOverTime: Array<{
+    date: string;
+    revenue: number;
+    purchases: number;
+  }>;
+}
+
+export interface CreateCategoryRequest {
+  name: string;
+  displayName: string;
+  description?: string;
+  iconUrl?: string;
+  sortOrder?: number;
+}
+
+export interface CreateProductRequest {
+  categoryId: string;
+  name: string;
+  description?: string;
+  priceCoins: number;
+  rarity: FurnitureRarity;
+  spriteUrl: string;
+  thumbnailUrl?: string;
+  previewUrl?: string;
+  width?: number;
+  height?: number;
+  canStack?: boolean;
+  maxPerUser?: number;
+  stockQuantity?: number;
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface ShopErrorResponse {
+  error: string;
+  code: string;
+  details?: Record<string, unknown>;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────────────────────────────────────────
 
 export const TOKENS_PER_COIN = 1000;
 export const MAX_PLAYERS_PER_ROOM = 50;

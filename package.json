@@ -24,6 +24,11 @@
     "docker:down": "docker compose -f infrastructure/dockers/development/docker-compose.yml down",
     "docker:logs": "docker compose -f infrastructure/dockers/development/docker-compose.yml logs -f",
     "docker:reset": "docker compose -f infrastructure/dockers/development/docker-compose.yml down -v && docker compose -f infrastructure/dockers/development/docker-compose.yml up -d",
+    "db:migrate": "cd infrastructure/dockers/development/scripts && ./migrate.sh up",
+    "db:seed": "cd infrastructure/dockers/development/scripts && ./migrate.sh seed",
+    "db:reset": "cd infrastructure/dockers/development/scripts && ./migrate.sh reset",
+    "db:status": "cd infrastructure/dockers/development/scripts && ./migrate.sh status",
+    "db:connect": "cd infrastructure/dockers/development/scripts && ./migrate.sh connect",
     "deploy": "npx tsx infrastructure/scripts/deploy.ts"
   },
   "devDependencies": {

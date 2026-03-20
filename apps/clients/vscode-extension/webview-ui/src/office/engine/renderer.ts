@@ -21,6 +21,7 @@ import {
   GRID_LINE_COLOR,
   HOVERED_OUTLINE_ALPHA,
   OUTLINE_Z_SORT_OFFSET,
+  RPS_COUNTDOWN_STEP_SEC,
   ROTATE_BUTTON_BG,
   SEAT_AVAILABLE_COLOR,
   SEAT_BUSY_COLOR,
@@ -515,6 +516,131 @@ export function renderBubbles(
   }
 }
 
+export function renderRpsBubbles(
+  ctx: CanvasRenderingContext2D,
+  characters: Character[],
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  for (const ch of characters) {
+    if (!ch.rps) continue;
+    const rps = ch.rps;
+    if (rps.phase === 'walk') continue;
+
+    // Determine what to show
+    let label = '';   // text label ("3", "2", "1")
+    let emoji = '';   // emoji below label
+    let bgColor = 'rgba(20,20,40,0.88)';
+    let borderColor = 'rgba(255,255,255,0.25)';
+
+    if (rps.phase === 'countdown') {
+      const step = rps.countdownStep;
+      label = String(3 - step); // "3" → "2" → "1"
+      emoji = '✊';
+      // Pulse: bigger on each new number
+      const stepProgress = (rps.phaseTimer % RPS_COUNTDOWN_STEP_SEC) / RPS_COUNTDOWN_STEP_SEC;
+      const pulse = 1.0 + 0.3 * Math.max(0, 1 - stepProgress * 3);
+      ctx.save();
+      const sittingOff0 = ch.state === CharacterState.TYPE ? BUBBLE_SITTING_OFFSET_PX : 0;
+      const cx0 = Math.round(offsetX + ch.x * zoom);
+      const cy0 = Math.round(offsetY + (ch.y + sittingOff0 - BUBBLE_VERTICAL_OFFSET_PX) * zoom - zoom * 6);
+      drawRpsBubble(ctx, cx0, cy0, zoom, label, emoji, bgColor, borderColor, pulse);
+      ctx.restore();
+      continue;
+    }
+
+    if (rps.phase === 'reveal') {
+      emoji = rps.choice === 'rock' ? '✊' : rps.choice === 'paper' ? '✋' : '✌';
+      label = rps.choice === 'rock' ? 'piedra' : rps.choice === 'paper' ? 'papel' : 'tijera';
+      bgColor = 'rgba(30,30,60,0.90)';
+    } else if (rps.phase === 'result') {
+      if (rps.result === 'win') {
+        emoji = '😂';
+        bgColor = 'rgba(20,80,20,0.92)';
+        borderColor = 'rgba(80,255,80,0.5)';
+      } else if (rps.result === 'lose') {
+        emoji = '😤';
+        bgColor = 'rgba(80,20,20,0.92)';
+        borderColor = 'rgba(255,80,80,0.5)';
+      } else {
+        emoji = '🤝';
+        bgColor = 'rgba(60,50,20,0.92)';
+        borderColor = 'rgba(255,200,80,0.5)';
+      }
+    }
+
+    if (!emoji) continue;
+
+    const sittingOff = ch.state === CharacterState.TYPE ? BUBBLE_SITTING_OFFSET_PX : 0;
+    const cx = Math.round(offsetX + ch.x * zoom);
+    const cy = Math.round(offsetY + (ch.y + sittingOff - BUBBLE_VERTICAL_OFFSET_PX) * zoom - zoom * 6);
+
+    drawRpsBubble(ctx, cx, cy, zoom, label, emoji, bgColor, borderColor, 1.0);
+  }
+}
+
+function drawRpsBubble(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  zoom: number,
+  label: string,
+  emoji: string,
+  bgColor: string,
+  borderColor: string,
+  scale: number,
+): void {
+  const fontSize = Math.max(8, zoom * 6);
+  const labelSize = Math.max(10, zoom * 8);
+  const pad = fontSize * 0.5;
+  const lineH = fontSize * 1.2;
+  const totalH = labelSize + lineH + pad * 2;
+  const totalW = Math.max(fontSize * 2.5, labelSize * label.length * 0.7 + pad * 2);
+  const r = 4 * (zoom / 3);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(scale, scale);
+
+  // Background rounded rect
+  const x = -totalW / 2;
+  const y = -totalH;
+  ctx.fillStyle = bgColor;
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = Math.max(1, zoom * 0.4);
+  ctx.beginPath();
+  ctx.roundRect(x, y, totalW, totalH, r);
+  ctx.fill();
+  ctx.stroke();
+
+  // Little tail pointing down
+  ctx.fillStyle = bgColor;
+  ctx.beginPath();
+  ctx.moveTo(-4, 0);
+  ctx.lineTo(4, 0);
+  ctx.lineTo(0, 5);
+  ctx.closePath();
+  ctx.fill();
+
+  // Label text (number or choice name)
+  if (label) {
+    ctx.font = `bold ${labelSize}px monospace`;
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(label, 0, y + pad);
+  }
+
+  // Emoji
+  ctx.font = `${fontSize}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  ctx.fillText(emoji, 0, y + pad + labelSize);
+
+  ctx.restore();
+}
+
 export interface ButtonBounds {
   /** Center X in device pixels */
   cx: number;
@@ -617,6 +743,7 @@ export function renderFrame(
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom);
+  renderRpsBubbles(ctx, characters, offsetX, offsetY, zoom);
 
   // Editor overlays
   if (editor) {

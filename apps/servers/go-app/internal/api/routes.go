@@ -7,20 +7,30 @@ import (
 
 	"token-town/server/internal/auth"
 	"token-town/server/internal/economy"
+	"token-town/server/internal/shop"
 	"token-town/server/internal/ws"
 )
 
 // RegisterRoutes sets up all HTTP routes
 func RegisterRoutes(r *chi.Mux, hub *ws.Hub, db *sql.DB) {
 	wallet := economy.NewWalletService(db)
-	shop := economy.NewShopService(db, wallet)
+	legacyShop := economy.NewShopService(db, wallet)
 
 	econHandler := &EconomyHandler{db: db, wallet: wallet}
-	shopHandler := &ShopHandler{db: db, shop: shop}
+	shopHandler := &ShopHandler{db: db, shop: legacyShop}
 	inventoryHandler := &InventoryHandler{db: db}
 	leaderboardHandler := &LeaderboardHandler{db: db}
 	roomsHandler := &RoomsHandler{db: db}
 	adminHandler := &AdminHandler{db: db, wallet: wallet}
+	furnitureShopHandler := newFurnitureShopHandler(db, hub)
+
+	// Wire furniture shop services into the WS hub
+	if hub != nil {
+		hub.FurnitureCatalog = shop.NewCatalogService(db)
+		hub.FurniturePurchase = shop.NewPurchaseService(db)
+		hub.FurnitureInventory = shop.NewInventoryService(db)
+		hub.FurniturePlacement = shop.NewPlacementService(db)
+	}
 
 	// Rate limiters: general (30 req/s, burst 60) and strict for token reports (5 req/s, burst 10)
 	generalLimiter := NewRateLimiter(30, 60)
@@ -53,6 +63,17 @@ func RegisterRoutes(r *chi.Mux, hub *ws.Hub, db *sql.DB) {
 
 		r.Get("/api/rooms/{userId}", roomsHandler.GetRoom)
 		r.Put("/api/rooms/me", roomsHandler.SaveMyRoom)
+
+		// Furniture shop
+		r.Get("/api/shop/categories", furnitureShopHandler.GetCategories)
+		r.Get("/api/shop/products", furnitureShopHandler.GetProducts)
+		r.Get("/api/shop/products/{productId}", furnitureShopHandler.GetProduct)
+		r.Post("/api/shop/products/{productId}/purchase", furnitureShopHandler.PurchaseProduct)
+		r.Get("/api/shop/inventory", furnitureShopHandler.GetInventory)
+		r.Get("/api/shop/purchase-history", furnitureShopHandler.GetPurchaseHistory)
+		r.Get("/api/shop/placements", furnitureShopHandler.GetPlacements)
+		r.Put("/api/shop/placements", furnitureShopHandler.UpdatePlacements)
+		r.Delete("/api/shop/placements/{placementId}", furnitureShopHandler.RemovePlacement)
 	})
 
 	// Admin routes

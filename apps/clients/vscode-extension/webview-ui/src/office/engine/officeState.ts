@@ -11,6 +11,13 @@ import {
   INACTIVE_SEAT_TIMER_MIN_SEC,
   INACTIVE_SEAT_TIMER_RANGE_SEC,
   PALETTE_COUNT,
+  RPS_COUNTDOWN_STEP_SEC,
+  RPS_COUNTDOWN_STEPS,
+  RPS_RESULT_DURATION_SEC,
+  RPS_REVEAL_DURATION_SEC,
+  RPS_TRIGGER_MAX_SEC,
+  RPS_TRIGGER_MIN_SEC,
+  RPS_WALK_TIMEOUT_SEC,
   WAITING_BUBBLE_DURATION_SEC,
 } from '../../constants.js';
 import { getAnimationFrames, getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog.js';
@@ -53,6 +60,7 @@ export class OfficeState {
   /** Reverse lookup: sub-agent character ID → parent info */
   subagentMeta: Map<number, { parentAgentId: number; parentToolId: string }> = new Map();
   private nextSubagentId = -1;
+  private rpsTimer = RPS_TRIGGER_MIN_SEC + Math.random() * (RPS_TRIGGER_MAX_SEC - RPS_TRIGGER_MIN_SEC);
 
   constructor(layout?: OfficeLayout) {
     this.layout = layout || createDefaultLayout();
@@ -516,9 +524,86 @@ export class OfficeState {
     return this.subagentIdMap.get(`${parentAgentId}:${parentToolId}`) ?? null;
   }
 
+  private closestWalkableTo(col: number, row: number): { col: number; row: number } | null {
+    if (this.walkableTiles.length === 0) return null;
+    let best = this.walkableTiles[0];
+    let bestDist = Math.abs(best.col - col) + Math.abs(best.row - row);
+    for (const t of this.walkableTiles) {
+      const d = Math.abs(t.col - col) + Math.abs(t.row - row);
+      if (d < bestDist) { best = t; bestDist = d; }
+    }
+    return best;
+  }
+
+  private closestWalkableToExcluding(
+    col: number,
+    row: number,
+    exclude: { col: number; row: number },
+  ): { col: number; row: number } | null {
+    if (this.walkableTiles.length === 0) return null;
+    let best: { col: number; row: number } | null = null;
+    let bestDist = Infinity;
+    for (const t of this.walkableTiles) {
+      if (t.col === exclude.col && t.row === exclude.row) continue;
+      const d = Math.abs(t.col - col) + Math.abs(t.row - row);
+      if (d < bestDist) { best = t; bestDist = d; }
+    }
+    return best;
+  }
+
+  startRps(id1: number, id2: number): void {
+    const ch1 = this.characters.get(id1);
+    const ch2 = this.characters.get(id2);
+    if (!ch1 || !ch2) return;
+
+    const choices: Array<'rock' | 'paper' | 'scissors'> = ['rock', 'paper', 'scissors'];
+    const choice1 = choices[Math.floor(Math.random() * 3)];
+    const choice2 = choices[Math.floor(Math.random() * 3)];
+
+    ch1.rps = { opponentId: id2, phase: 'walk', phaseTimer: 0, choice: choice1, result: null, countdownStep: 0 };
+    ch2.rps = { opponentId: id1, phase: 'walk', phaseTimer: 0, choice: choice2, result: null, countdownStep: 0 };
+
+    // Find two adjacent walkable tiles for them to stand face-to-face
+    const midCol = Math.round((ch1.tileCol + ch2.tileCol) / 2);
+    const midRow = Math.round((ch1.tileRow + ch2.tileRow) / 2);
+
+    const target1 = this.closestWalkableTo(midCol - 1, midRow);
+    let target2 = this.closestWalkableTo(midCol + 1, midRow);
+
+    // Ensure they don't end up on the same tile
+    if (target1 && target2 && target1.col === target2.col && target1.row === target2.row) {
+      // Find a different walkable tile for the second character
+      target2 = this.closestWalkableToExcluding(midCol + 1, midRow, target1);
+    }
+
+    const targets = [[ch1, target1], [ch2, target2]] as Array<[typeof ch1, { col: number; row: number } | null]>;
+    for (const [ch, target] of targets) {
+      ch.seatTimer = 0;
+      ch.state = CharacterState.IDLE;
+
+      if (!target) continue;
+      const path = this.withOwnSeatUnblocked(ch, () =>
+        findPath(ch.tileCol, ch.tileRow, target.col, target.row, this.tileMap, this.blockedTiles),
+      );
+      if (path.length > 0) {
+        ch.path = path;
+        ch.moveProgress = 0;
+        ch.state = CharacterState.WALK;
+        ch.frame = 0;
+        ch.frameTimer = 0;
+      }
+    }
+  }
+
   setAgentActive(id: number, active: boolean): void {
     const ch = this.characters.get(id);
     if (ch) {
+      if (active && ch.rps) {
+        // Cancel RPS for opponent too
+        const opp = this.characters.get(ch.rps.opponentId);
+        if (opp) opp.rps = null;
+        ch.rps = null;
+      }
       ch.isActive = active;
       if (!active) {
         // Sentinel -1: signals turn just ended, skip next seat rest timer.
@@ -650,6 +735,83 @@ export class OfficeState {
     const newFrame = Math.floor(this.furnitureAnimTimer / FURNITURE_ANIM_INTERVAL_SEC);
     if (newFrame !== prevFrame) {
       this.rebuildFurnitureInstances();
+    }
+
+    // ── RPS phase transitions ──────────────────────────────────
+    for (const ch of this.characters.values()) {
+      if (!ch.rps || ch.matrixEffect) continue;
+      const rps = ch.rps;
+      rps.phaseTimer += dt;
+
+      // Cancel if opponent gone
+      if (!this.characters.has(rps.opponentId)) {
+        ch.rps = null;
+        continue;
+      }
+
+      if (rps.phase === 'walk') {
+        if (rps.phaseTimer >= RPS_WALK_TIMEOUT_SEC) {
+          rps.phase = 'countdown';
+          rps.phaseTimer = 0;
+          rps.countdownStep = 0;
+          ch.path = [];
+          ch.moveProgress = 0;
+          ch.state = CharacterState.IDLE;
+          // Face opponent — always prefer horizontal facing (side profile for RPS)
+          const opp = this.characters.get(rps.opponentId);
+          if (opp) {
+            const dc = opp.tileCol - ch.tileCol;
+            ch.dir = dc >= 0 ? Direction.RIGHT : Direction.LEFT;
+          }
+        }
+      } else if (rps.phase === 'countdown') {
+        rps.countdownStep = Math.min(
+          Math.floor(rps.phaseTimer / RPS_COUNTDOWN_STEP_SEC),
+          RPS_COUNTDOWN_STEPS - 1,
+        );
+        if (rps.phaseTimer >= RPS_COUNTDOWN_STEP_SEC * RPS_COUNTDOWN_STEPS) {
+          rps.phase = 'reveal';
+          rps.phaseTimer = 0;
+          // Determine result
+          const opp = this.characters.get(rps.opponentId);
+          if (opp?.rps) {
+            const beats: Record<string, string> = { rock: 'scissors', scissors: 'paper', paper: 'rock' };
+            if (rps.choice === opp.rps.choice) rps.result = 'draw';
+            else if (beats[rps.choice] === opp.rps.choice) rps.result = 'win';
+            else rps.result = 'lose';
+          }
+        }
+      } else if (rps.phase === 'reveal') {
+        if (rps.phaseTimer >= RPS_REVEAL_DURATION_SEC) {
+          rps.phase = 'result';
+          rps.phaseTimer = 0;
+        }
+      } else if (rps.phase === 'result') {
+        if (rps.phaseTimer >= RPS_RESULT_DURATION_SEC) {
+          ch.rps = null;
+          ch.state = CharacterState.IDLE;
+          ch.wanderTimer = 0;
+        }
+      }
+    }
+
+    // ── RPS trigger ────────────────────────────────────────────
+    this.rpsTimer -= dt;
+    if (this.rpsTimer <= 0) {
+      this.rpsTimer = RPS_TRIGGER_MIN_SEC + Math.random() * (RPS_TRIGGER_MAX_SEC - RPS_TRIGGER_MIN_SEC);
+      const eligible = Array.from(this.characters.values()).filter(
+        (ch) =>
+          !ch.isActive &&
+          !ch.rps &&
+          !ch.matrixEffect &&
+          (ch.state === CharacterState.IDLE || ch.state === CharacterState.TYPE),
+      );
+      if (eligible.length >= 2) {
+        const i1 = Math.floor(Math.random() * eligible.length);
+        let i2: number;
+        do { i2 = Math.floor(Math.random() * eligible.length); } while (i2 === i1);
+        this.startRps(eligible[i1].id, eligible[i2].id);
+      }
     }
 
     const toDelete: number[] = [];

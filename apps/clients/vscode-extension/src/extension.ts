@@ -5,6 +5,7 @@ import { AgentBroadcaster } from './agentBroadcaster.js';
 import { COMMAND_EXPORT_DEFAULT_LAYOUT, COMMAND_SHOW_PANEL, VIEW_ID } from './constants.js';
 import { EconomyClient } from './economyClient.js';
 import { PixelAgentsViewProvider } from './PixelAgentsViewProvider.js';
+import { ShopRelay } from './shopRelay.js';
 import { extractTokenUsage, TokenReporter } from './tokenReporter.js';
 import { setTokenUsageCallback } from './transcriptParser.js';
 import { TokenTownWsClient } from './wsClient.js';
@@ -20,6 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
     () => economyClient.getAuthToken(),
   );
   const agentBroadcaster = new AgentBroadcaster(wsClient);
+  const shopRelay = new ShopRelay(wsClient, (msg) => providerInstance?.postMessageToWebview(msg));
 
   // Hook token usage extraction into transcript parsing
   setTokenUsageCallback((_agentId, record) => {
@@ -33,6 +35,9 @@ export function activate(context: vscode.ExtensionContext) {
       tokenReporter.reportUsage(sessionId, result.requestId, result.usage);
     }
   });
+
+  // Start shop relay (WS server → webview forwarding)
+  shopRelay.startListening();
 
   // Connect and register on WS open
   const onConnected = wsClient.on('_connected', async () => {
@@ -63,6 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
   const provider = new PixelAgentsViewProvider(context, {
     tokenReporter,
     agentBroadcaster,
+    shopRelay,
   });
   providerInstance = provider;
 
@@ -87,6 +93,7 @@ export function activate(context: vscode.ExtensionContext) {
       onConnected.dispose();
       onCoinsUpdate.dispose();
       agentBroadcaster.dispose();
+      shopRelay.dispose();
       tokenReporter.dispose();
       economyClient.dispose();
       wsClient.dispose();

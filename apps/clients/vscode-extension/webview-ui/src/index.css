@@ -30,6 +30,10 @@
   --pixel-agent-border: #5ac88c;
   --pixel-agent-text: rgba(200, 255, 220, 0.95);
 
+  /* Coin display */
+  --pixel-coin-text: #ffd700;
+  --pixel-coin-border: #b8860b;
+
   /* Close button */
   --pixel-close-text: rgba(255, 255, 255, 0.5);
   --pixel-close-hover: #e55;

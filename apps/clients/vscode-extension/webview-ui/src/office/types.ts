@@ -43,6 +43,18 @@ export const CharacterState = {
 } as const;
 export type CharacterState = (typeof CharacterState)[keyof typeof CharacterState];
 
+export type RpsChoice = 'rock' | 'paper' | 'scissors';
+export type RpsResult = 'win' | 'lose' | 'draw';
+
+export interface RpsData {
+  opponentId: number;
+  phase: 'walk' | 'countdown' | 'reveal' | 'result';
+  phaseTimer: number;
+  choice: RpsChoice;
+  result: RpsResult | null;
+  countdownStep: number;
+}
+
 export const Direction = {
   DOWN: 0,
   LEFT: 1,
@@ -190,4 +202,6 @@ export interface Character {
   matrixEffectSeeds: number[];
   /** Workspace folder name (only set for multi-root workspaces) */
   folderName?: string;
+  /** Active rock-paper-scissors game data, or null */
+  rps: RpsData | null;
 }

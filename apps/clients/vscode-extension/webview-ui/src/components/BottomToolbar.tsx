@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import type { WorkspaceFolder } from '../hooks/useExtensionMessages.js';
 import { vscode } from '../vscodeApi.js';
+import { CoinCounter } from './shop/CoinCounter.js';
 import { SettingsModal } from './SettingsModal.js';
 
 interface BottomToolbarProps {
@@ -11,6 +12,8 @@ interface BottomToolbarProps {
   isDebugMode: boolean;
   onToggleDebugMode: () => void;
   workspaceFolders: WorkspaceFolder[];
+  coins: number | null;
+  onOpenShop?: () => void;
 }
 
 const panelStyle: React.CSSProperties = {
@@ -51,6 +54,8 @@ export function BottomToolbar({
   isDebugMode,
   onToggleDebugMode,
   workspaceFolders,
+  coins,
+  onOpenShop,
 }: BottomToolbarProps) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -187,6 +192,9 @@ export function BottomToolbar({
           onToggleDebugMode={onToggleDebugMode}
         />
       </div>
+      {onOpenShop && (
+        <CoinCounter coins={coins} onOpenShop={onOpenShop} />
+      )}
     </div>
   );
 }

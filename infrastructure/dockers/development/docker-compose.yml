@@ -11,9 +11,18 @@ services:
       POSTGRES_DB: tokentown
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      # Enable query logging for development
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # Initialize database with base schema
       - ./services/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      # Apply furniture shop migrations
+      - ../../apps/servers/go-app/internal/db/migrations:/docker-entrypoint-initdb.d/02-migrations:ro
+      # Seed data (applied after migrations)
+      - ../../apps/servers/go-app/internal/db/seeds:/docker-entrypoint-initdb.d/03-seeds:ro
+      # Backup directory
+      - ./services/postgres/backups:/backups
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d tokentown"]
       interval: 5s
@@ -38,4 +47,6 @@ services:
 
 volumes:
   postgres-data:
+    driver: local
   redis-data:
+    driver: local

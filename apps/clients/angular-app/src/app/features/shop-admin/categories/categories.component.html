@@ -1,0 +1,88 @@
+<div class="page-header">
+  <h1>Categories Management</h1>
+  <button class="btn-primary" (click)="openModal()">
+    <span>+</span> Add Category
+  </button>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-label">Total Categories</div>
+    <div class="stat-value">{{ categories().length }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Active</div>
+    <div class="stat-value">{{ activeCount() }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Inactive</div>
+    <div class="stat-value">{{ inactiveCount() }}</div>
+  </div>
+</div>
+
+@if (error()) {
+  <div class="error-banner" style="background: var(--color-error-bg, #2d1b1b); border: 1px solid var(--color-error, #e74c3c); color: var(--color-error, #e74c3c); padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+    {{ error() }}
+    <button (click)="loadCategories()" style="background: transparent; color: var(--color-error, #e74c3c); border: 1px solid var(--color-error, #e74c3c); padding: 4px 12px; border-radius: 4px; cursor: pointer; float: right;">Retry</button>
+  </div>
+}
+
+<app-data-table
+  [data]="categories()"
+  [columns]="columns"
+  [actions]="actions"
+  [loading]="loading()"
+/>
+
+@if (showModal()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingCategory() ? 'Edit Category' : 'Add Category' }}</h2>
+        <button class="btn-close" (click)="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Display Name *</label>
+          <input [(ngModel)]="formData.displayName" (input)="generateName()" placeholder="e.g., Living Room">
+          @if (formErrors['displayName']) {
+            <div class="error">{{ formErrors['displayName'] }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Name (internal slug) *</label>
+          <input [(ngModel)]="formData.name" placeholder="e.g., living_room">
+          @if (formErrors['name']) {
+            <div class="error">{{ formErrors['name'] }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea [(ngModel)]="formData.description" placeholder="Optional category description"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Icon URL</label>
+          <input [(ngModel)]="formData.iconUrl" placeholder="https://...">
+        </div>
+
+        <div class="form-group">
+          <label>Sort Order</label>
+          <input type="number" [(ngModel)]="formData.sortOrder" min="0">
+        </div>
+
+        @if (formErrors['submit']) {
+          <div class="error" style="margin-top: 16px;">{{ formErrors['submit'] }}</div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModal()">Cancel</button>
+        <button class="btn-primary" (click)="saveCategory()" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : 'Save Category' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

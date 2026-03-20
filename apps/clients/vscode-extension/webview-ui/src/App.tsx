@@ -14,6 +14,8 @@ import { EditorToolbar } from './office/editor/EditorToolbar.js';
 import { OfficeState } from './office/engine/officeState.js';
 import { isRotatable } from './office/layout/furnitureCatalog.js';
 import { EditTool } from './office/types.js';
+import { ShopModal } from './shop/components/ShopModal.js';
+import { useShopState } from './shop/useShopState.js';
 import { vscode } from './vscodeApi.js';
 
 // Game state lives outside React — updated imperatively by message handlers
@@ -138,7 +140,15 @@ function App() {
     layoutWasReset,
     loadedAssets,
     workspaceFolders,
+    coins,
   } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty);
+
+  const shop = useShopState({
+    initialCoins: coins,
+    onPlaceInOffice: (productId) => {
+      vscode.postMessage({ type: 'placeInOffice', productId });
+    },
+  });
 
   // Show migration notice once layout reset is detected
   const [migrationNoticeDismissed, setMigrationNoticeDismissed] = useState(false);
@@ -271,6 +281,8 @@ function App() {
         isDebugMode={isDebugMode}
         onToggleDebugMode={handleToggleDebugMode}
         workspaceFolders={workspaceFolders}
+        coins={shop.shopState.coins ?? coins}
+        onOpenShop={shop.openShop}
       />
 
       {editor.isEditMode && editor.isDirty && (
@@ -352,6 +364,31 @@ function App() {
           onSelectAgent={handleSelectAgent}
         />
       )}
+
+      <ShopModal
+        isOpen={shop.shopState.isOpen}
+        onClose={shop.closeShop}
+        products={shop.filteredProducts}
+        selectedCategory={shop.shopState.selectedCategory}
+        onSelectCategory={shop.selectCategory}
+        cart={shop.shopState.cart}
+        coins={shop.shopState.coins}
+        isLoading={shop.shopState.isLoading}
+        error={shop.shopState.error}
+        currentView={shop.shopState.currentView}
+        onSwitchView={shop.switchView}
+        inventory={shop.shopState.inventory}
+        onAddToCart={shop.addToCart}
+        onRemoveFromCart={shop.removeFromCart}
+        onUpdateCartQuantity={shop.updateCartQuantity}
+        onClearCart={shop.clearCart}
+        onCheckout={shop.purchaseItems}
+        onPlaceInOffice={shop.placeInOffice}
+        isProcessingPurchase={shop.isProcessingPurchase}
+        purchaseResult={shop.purchaseResult}
+        cartTotal={shop.cartTotal}
+        canAffordCart={shop.canAffordCart}
+      />
 
       {showMigrationNotice && (
         <div

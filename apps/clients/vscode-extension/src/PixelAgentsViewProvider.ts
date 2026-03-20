@@ -34,6 +34,7 @@ import {
 import { ensureProjectScan } from './fileWatcher.js';
 import type { LayoutWatcher } from './layoutPersistence.js';
 import { readLayoutFromFile, watchLayoutFile, writeLayoutToFile } from './layoutPersistence.js';
+import type { ShopRelay } from './shopRelay.js';
 import type { TokenReporter } from './tokenReporter.js';
 import { extractTokenUsage } from './tokenReporter.js';
 import type { AgentState } from './types.js';
@@ -41,6 +42,7 @@ import type { AgentState } from './types.js';
 export interface MultiplayerServices {
   tokenReporter: TokenReporter;
   agentBroadcaster: AgentBroadcaster;
+  shopRelay: ShopRelay;
 }
 
 export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
@@ -94,6 +96,11 @@ export class PixelAgentsViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = getWebviewContent(webviewView.webview, this.extensionUri);
 
     webviewView.webview.onDidReceiveMessage(async (message) => {
+      // Delegate shop events to ShopRelay (webview → WS server)
+      if (this.multiplayer?.shopRelay.handleWebviewMessage(message)) {
+        return;
+      }
+
       if (message.type === 'openClaude') {
         await launchNewTerminal(
           this.nextAgentId,

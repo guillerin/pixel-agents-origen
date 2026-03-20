@@ -114,3 +114,12 @@ export const CHARACTER_HIT_HALF_WIDTH = 8;
 export const CHARACTER_HIT_HEIGHT = 24;
 export const TOOL_OVERLAY_VERTICAL_OFFSET = 32;
 export const PULSE_ANIMATION_DURATION_SEC = 1.5;
+
+// ── Rock Paper Scissors ──────────────────────────────────────
+export const RPS_TRIGGER_MIN_SEC = 50.0;
+export const RPS_TRIGGER_MAX_SEC = 60.0;
+export const RPS_WALK_TIMEOUT_SEC = 5.0;
+export const RPS_COUNTDOWN_STEP_SEC = 0.4;
+export const RPS_COUNTDOWN_STEPS = 3;
+export const RPS_REVEAL_DURATION_SEC = 2.0;
+export const RPS_RESULT_DURATION_SEC = 1.5;

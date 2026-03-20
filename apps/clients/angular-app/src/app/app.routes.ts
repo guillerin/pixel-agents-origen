@@ -19,6 +19,21 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'shop-admin/categories',
+    loadComponent: () => import('./features/shop-admin/categories/categories.component').then(m => m.CategoriesComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'shop-admin/products',
+    loadComponent: () => import('./features/shop-admin/products/products.component').then(m => m.ProductsComponent),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'shop-admin/analytics',
+    loadComponent: () => import('./features/shop-admin/analytics/analytics.component').then(m => m.AnalyticsComponent),
+    canActivate: [authGuard],
+  },
+  {
     path: 'leaderboard',
     loadComponent: () => import('./features/leaderboard/leaderboard.component').then(m => m.LeaderboardComponent),
     canActivate: [authGuard],

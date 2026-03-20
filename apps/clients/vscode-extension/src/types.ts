@@ -12,6 +12,7 @@ export interface AgentState {
   activeToolNames: Map<string, string>;
   activeSubagentToolIds: Map<string, Set<string>>; // parentToolId → active sub-tool IDs
   activeSubagentToolNames: Map<string, Map<string, string>>; // parentToolId → (subToolId → toolName)
+  subagentSpawnTimes: Map<string, number>; // toolId → timestamp when subagent was created
   isWaiting: boolean;
   permissionSent: boolean;
   hadToolsInTurn: boolean;

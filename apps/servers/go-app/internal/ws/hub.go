@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"token-town/server/internal/economy"
+	"token-town/server/internal/shop"
 )
 
 // RoomManager provides room state operations (implemented by rooms.Manager)
@@ -45,8 +46,14 @@ type Hub struct {
 	RoomMgr RoomManager
 	// DB for direct queries (room saves, etc.)
 	DB *sql.DB
-	// Shop handles purchase operations
+	// Shop handles purchase operations (legacy)
 	Shop *economy.ShopService
+
+	// Furniture shop services
+	FurnitureCatalog   *shop.CatalogService
+	FurniturePurchase  *shop.PurchaseService
+	FurnitureInventory *shop.InventoryService
+	FurniturePlacement *shop.PlacementService
 }
 
 // RoomMessage is a message to be broadcast to a room

@@ -65,6 +65,96 @@ CREATE TABLE IF NOT EXISTS room_layouts (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Furniture shop categories
+CREATE TABLE IF NOT EXISTS furniture_categories (
+    id              TEXT PRIMARY KEY,
+    name            TEXT NOT NULL UNIQUE,
+    display_name    TEXT NOT NULL,
+    description     TEXT,
+    icon_url        TEXT,
+    sort_order      INTEGER NOT NULL DEFAULT 0,
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Furniture products catalog
+CREATE TABLE IF NOT EXISTS furniture_products (
+    id              TEXT PRIMARY KEY,
+    category_id     TEXT NOT NULL REFERENCES furniture_categories(id) ON DELETE RESTRICT,
+    name            TEXT NOT NULL,
+    description     TEXT,
+    price_coins     INTEGER NOT NULL CHECK (price_coins >= 0),
+    rarity          TEXT NOT NULL DEFAULT 'common'
+                        CHECK (rarity IN ('common', 'uncommon', 'rare', 'legendary')),
+    width           INTEGER NOT NULL DEFAULT 1 CHECK (width > 0),
+    height          INTEGER NOT NULL DEFAULT 1 CHECK (height > 0),
+    can_stack       BOOLEAN NOT NULL DEFAULT FALSE,
+    sprite_url      TEXT NOT NULL,
+    thumbnail_url   TEXT,
+    preview_url     TEXT,
+    is_available    BOOLEAN NOT NULL DEFAULT TRUE,
+    available_from  TIMESTAMPTZ,
+    available_until TIMESTAMPTZ,
+    stock_quantity  INTEGER CHECK (stock_quantity >= 0),
+    max_per_user    INTEGER CHECK (max_per_user > 0),
+    tags            TEXT[] NOT NULL DEFAULT '{}',
+    metadata        JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT valid_date_range CHECK (
+        available_from IS NULL
+        OR available_until IS NULL
+        OR available_from < available_until
+    )
+);
+
+-- User furniture inventory
+CREATE TABLE IF NOT EXISTS user_furniture_inventory (
+    id                  BIGSERIAL PRIMARY KEY,
+    user_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    product_id          TEXT NOT NULL REFERENCES furniture_products(id) ON DELETE CASCADE,
+    quantity            INTEGER NOT NULL DEFAULT 1 CHECK (quantity >= 0),
+    first_purchased_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_purchased_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (user_id, product_id)
+);
+CREATE INDEX IF NOT EXISTS idx_user_inventory_user ON user_furniture_inventory(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_inventory_product ON user_furniture_inventory(product_id);
+
+-- Furniture purchase audit log
+CREATE TABLE IF NOT EXISTS furniture_purchase_history (
+    id              BIGSERIAL PRIMARY KEY,
+    user_id         TEXT NOT NULL REFERENCES users(id),
+    product_id      TEXT NOT NULL REFERENCES furniture_products(id),
+    quantity        INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
+    coins_spent     INTEGER NOT NULL CHECK (coins_spent >= 0),
+    balance_after   INTEGER NOT NULL CHECK (balance_after >= 0),
+    transaction_id  BIGINT REFERENCES transactions(id),
+    purchase_method TEXT NOT NULL DEFAULT 'shop'
+                        CHECK (purchase_method IN ('shop', 'admin', 'gift', 'refund')),
+    purchased_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    metadata        JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+CREATE INDEX IF NOT EXISTS idx_purchase_history_user ON furniture_purchase_history(user_id, purchased_at DESC);
+CREATE INDEX IF NOT EXISTS idx_purchase_history_product ON furniture_purchase_history(product_id, purchased_at DESC);
+
+-- Room furniture placements (positioned furniture per user/room)
+CREATE TABLE IF NOT EXISTS room_furniture_placements (
+    id                  BIGSERIAL PRIMARY KEY,
+    user_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    inventory_item_id   BIGINT NOT NULL REFERENCES user_furniture_inventory(id) ON DELETE CASCADE,
+    x                   INTEGER NOT NULL CHECK (x >= 0),
+    y                   INTEGER NOT NULL CHECK (y >= 0),
+    rotation            INTEGER NOT NULL DEFAULT 0 CHECK (rotation IN (0, 90, 180, 270)),
+    layer               INTEGER NOT NULL DEFAULT 0,
+    room_id             TEXT NOT NULL DEFAULT 'main',
+    placed_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_room_placements_user_room ON room_furniture_placements(user_id, room_id);
+CREATE INDEX IF NOT EXISTS idx_room_placements_position ON room_furniture_placements(user_id, room_id, x, y);
+
 -- Active agents per user (multiplayer visibility)
 CREATE TABLE IF NOT EXISTS agents (
     id              BIGSERIAL PRIMARY KEY,

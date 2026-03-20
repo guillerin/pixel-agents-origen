@@ -83,6 +83,7 @@ export function createCharacter(
     matrixEffect: null,
     matrixEffectTimer: 0,
     matrixEffectSeeds: [],
+    rps: null,
   };
 }
 
@@ -120,6 +121,11 @@ export function updateCharacter(
     }
 
     case CharacterState.IDLE: {
+      // If in RPS, don't wander — stand still waiting for phase transition
+      if (ch.rps) {
+        ch.frame = 0;
+        break;
+      }
       // No idle animation — static pose
       ch.frame = 0;
       if (ch.seatTimer < 0) ch.seatTimer = 0; // clear turn-end sentinel

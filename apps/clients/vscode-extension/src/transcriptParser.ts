@@ -3,6 +3,7 @@ import type * as vscode from 'vscode';
 
 import {
   BASH_COMMAND_DISPLAY_MAX_LENGTH,
+  SUBAGENT_MIN_LIFETIME_MS,
   TASK_DESCRIPTION_DISPLAY_MAX_LENGTH,
   TEXT_IDLE_DELAY_MS,
   TOOL_DONE_DELAY_MS,
@@ -58,13 +59,6 @@ export function formatToolStatus(toolName: string, input: Record<string, unknown
     case 'Task':
     case 'Agent': {
       const desc = typeof input.description === 'string' ? input.description : '';
-      return desc
-        ? `Subtask: ${desc.length > TASK_DESCRIPTION_DISPLAY_MAX_LENGTH ? desc.slice(0, TASK_DESCRIPTION_DISPLAY_MAX_LENGTH) + '\u2026' : desc}`
-        : 'Running subtask';
-    }
-    case 'Agent': {
-      const prompt = typeof input.prompt === 'string' ? input.prompt : '';
-      const desc = typeof input.description === 'string' ? input.description : prompt;
       return desc
         ? `Subtask: ${desc.length > TASK_DESCRIPTION_DISPLAY_MAX_LENGTH ? desc.slice(0, TASK_DESCRIPTION_DISPLAY_MAX_LENGTH) + '\u2026' : desc}`
         : 'Subtask: Agent';
@@ -129,6 +123,11 @@ export function processTranscriptLine(
             agent.activeToolIds.add(block.id);
             agent.activeToolStatuses.set(block.id, status);
             agent.activeToolNames.set(block.id, toolName);
+            // Track spawn time for subagent-spawning tools
+            if (toolName === 'Task' || toolName === 'Agent' || toolName === 'TeamCreate' || toolName === 'SendMessage') {
+              agent.subagentSpawnTimes.set(block.id, Date.now());
+              console.log(`[Pixel Agents] Subagent spawn: toolId=${block.id}, toolName=${toolName}`);
+            }
             if (!PERMISSION_EXEMPT_TOOLS.has(toolName)) {
               hasNonExemptTool = true;
             }
@@ -172,11 +171,21 @@ export function processTranscriptLine(
               if (isSubagentTool) {
                 agent.activeSubagentToolIds.delete(completedToolId);
                 agent.activeSubagentToolNames.delete(completedToolId);
-                webview?.postMessage({
-                  type: 'subagentClear',
-                  id: agentId,
-                  parentToolId: completedToolId,
-                });
+                // Delay clear if subagent was just spawned (prevents flash when
+                // tool_use and tool_result arrive in the same file read batch)
+                const spawnTime = agent.subagentSpawnTimes.get(completedToolId);
+                const elapsed = spawnTime ? Date.now() - spawnTime : Infinity;
+                const delay = Math.max(0, SUBAGENT_MIN_LIFETIME_MS - elapsed);
+                console.log(`[Pixel Agents] Subagent clear: toolId=${completedToolId}, spawnTime=${spawnTime}, elapsed=${elapsed}ms, delay=${delay}ms`);
+                agent.subagentSpawnTimes.delete(completedToolId);
+                setTimeout(() => {
+                  console.log(`[Pixel Agents] Sending subagentClear for toolId=${completedToolId}`);
+                  webview?.postMessage({
+                    type: 'subagentClear',
+                    id: agentId,
+                    parentToolId: completedToolId,
+                  });
+                }, delay);
               }
               agent.activeToolIds.delete(completedToolId);
               agent.activeToolStatuses.delete(completedToolId);

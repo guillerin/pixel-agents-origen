@@ -1,0 +1,139 @@
+<div class="page-header">
+  <h1>Shop Analytics</h1>
+  <div class="period-selector">
+    @for (period of periods; track period.value) {
+      <button
+        class="period-btn"
+        [class.active]="selectedPeriod() === period.value"
+        (click)="selectPeriod(period.value)"
+      >
+        {{ period.label }}
+      </button>
+    }
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading analytics...</p>
+  </div>
+} @else if (error()) {
+  <div class="error-banner">
+    <span>{{ error() }}</span>
+    <button (click)="loadAnalytics()" style="background: transparent; color: var(--color-error, #e74c3c); border: 1px solid var(--color-error, #e74c3c); padding: 4px 12px; border-radius: 4px; cursor: pointer;">Retry</button>
+  </div>
+} @else if (analytics()) {
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-icon">💰</div>
+      </div>
+      <div class="stat-value">{{ formatNumber(analytics()!.totalRevenue) }} coins</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-label">Total Purchases</div>
+        <div class="stat-icon">🛒</div>
+      </div>
+      <div class="stat-value">{{ formatNumber(analytics()!.totalPurchases) }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-label">Unique Customers</div>
+        <div class="stat-icon">👥</div>
+      </div>
+      <div class="stat-value">{{ formatNumber(analytics()!.uniqueCustomers) }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-header">
+        <div class="stat-label">Avg Order Value</div>
+        <div class="stat-icon">📊</div>
+      </div>
+      <div class="stat-value">{{ formatNumber(analytics()!.averageOrderValue) }} coins</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h2 class="chart-title">Revenue Over Time</h2>
+      </div>
+      @if (analytics()!.revenueOverTime.length > 0) {
+        <div class="revenue-chart">
+          @for (point of analytics()!.revenueOverTime; track point.date) {
+            <div class="chart-bar-wrapper">
+              <div
+                class="chart-bar"
+                [style.height.%]="maxRevenue > 0 ? (point.revenue / maxRevenue) * 100 : 0"
+                [title]="point.date + ': ' + formatNumber(point.revenue) + ' coins'"
+              >
+                <div class="chart-bar-tooltip">
+                  <div>{{ point.date }}</div>
+                  <div>{{ formatNumber(point.revenue) }} coins</div>
+                  <div>{{ point.purchases }} purchases</div>
+                </div>
+              </div>
+              <div class="chart-bar-label">{{ point.date | date:'MM/dd' }}</div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div style="padding: 48px; text-align: center; color: var(--color-text-muted);">No revenue data for this period</div>
+      }
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <h2 class="chart-title">Revenue by Category</h2>
+      </div>
+      @if (analytics()!.revenueByCategory.length > 0) {
+        <div class="category-chart">
+          @for (cat of analytics()!.revenueByCategory; track cat.categoryId) {
+            <div class="category-item">
+              <div class="category-bar-wrapper">
+                <div class="category-header">
+                  <span class="category-name">{{ cat.categoryName }}</span>
+                  <span class="category-stats">{{ cat.percentage | number:'1.0-1' }}%</span>
+                </div>
+                <div class="category-bar">
+                  <div class="category-bar-fill" [style.width.%]="cat.percentage"></div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--color-text-muted);">
+                  {{ formatNumber(cat.revenue) }} coins
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div style="padding: 48px; text-align: center; color: var(--color-text-muted);">No category data</div>
+      }
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-header">
+      <h2 class="chart-title">Top Products</h2>
+    </div>
+    @if (analytics()!.topProducts.length > 0) {
+      <div class="products-list">
+        @for (product of analytics()!.topProducts; track product.productId; let i = $index) {
+          <div class="product-item">
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--color-text-muted); min-width: 32px;">#{{ i + 1 }}</div>
+            <div class="product-info">
+              <div class="product-name">{{ product.name }}</div>
+              <div class="product-stats">{{ product.purchases }} purchases</div>
+            </div>
+            <div class="product-revenue">
+              <div class="revenue-amount">{{ formatNumber(product.revenue) }} coins</div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div style="padding: 48px; text-align: center; color: var(--color-text-muted);">No product sales data</div>
+    }
+  </div>
+}

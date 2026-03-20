@@ -1,0 +1,95 @@
+<div class="data-table-wrapper">
+  @if (filterable()) {
+    <div class="table-header">
+      <div class="search-box">
+        <input
+          type="text"
+          [value]="searchQuery()"
+          (input)="onSearch($event)"
+          placeholder="Search..."
+        >
+      </div>
+      <div class="filters">
+        <ng-content select="[filters]"></ng-content>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div>Loading data...</div>
+    </div>
+  } @else if (getSortedData().length === 0) {
+    <div class="empty-state">
+      <div>No data available</div>
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          @for (col of columns(); track col.key) {
+            <th
+              [class.sortable]="col.sortable && sortable()"
+              [class.active]="sortColumn() === col.key"
+              (click)="onSort(col.key)"
+            >
+              {{ col.label }}
+              @if (col.sortable && sortable()) {
+                <span class="sort-icon">
+                  @if (sortColumn() === col.key) {
+                    {{ sortDirection() === 'asc' ? '↑' : '↓' }}
+                  } @else {
+                    ⇅
+                  }
+                </span>
+              }
+            </th>
+          }
+          @if (actions().length > 0) {
+            <th>Actions</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of getSortedData(); track row.id || row) {
+          <tr>
+            @for (col of columns(); track col.key) {
+              <td [class]="col.type === 'image' ? 'image-cell' : ''">
+                @if (col.type === 'badge') {
+                  <span class="badge" [class]="getBadgeClass(row[col.key], col)">
+                    {{ formatValue(row[col.key], col, row) }}
+                  </span>
+                } @else if (col.type === 'image') {
+                  <img [src]="getImageSrc(row[col.key])" [alt]="row.name || 'Image'" class="image-thumbnail">
+                } @else if (col.type === 'actions') {
+                  <!-- Skip, handled separately -->
+                } @else {
+                  {{ formatValue(row[col.key], col, row) }}
+                }
+              </td>
+            }
+            @if (actions().length > 0) {
+              <td class="actions-cell">
+                @for (action of actions(); track action.label) {
+                  @if (!action.show || action.show(row)) {
+                    <button
+                      class="btn-action"
+                      [class]="action.class || 'btn-secondary'"
+                      (click)="action.handler(row)"
+                    >
+                      @if (action.icon) {
+                        <span>{{ action.icon }}</span>
+                      }
+                      {{ action.label }}
+                    </button>
+                  }
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
