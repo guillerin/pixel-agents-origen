@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
 
+	"token-town/server/internal/auth"
 	"token-town/server/internal/economy"
 	"token-town/server/internal/shop"
 )
@@ -175,10 +177,18 @@ func (h *Hub) ServeWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: extract userID from Authorization header after auth middleware
-	userID := r.Header.Get("X-User-ID")
-	if userID == "" {
-		userID = "anonymous"
+	// Extract userID from Bearer token in Authorization header
+	userID := "anonymous"
+	if authHeader := r.Header.Get("Authorization"); strings.HasPrefix(authHeader, "Bearer ") {
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		if claims, err := auth.ValidateToken(token); err == nil {
+			userID = claims.UserID
+		} else {
+			log.Printf("[hub] invalid token: %v", err)
+		}
+	}
+	if headerUID := r.Header.Get("X-User-ID"); headerUID != "" && userID == "anonymous" {
+		userID = headerUID
 	}
 
 	client := &Client{
